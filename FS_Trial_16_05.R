@@ -1,4 +1,5 @@
 library(tidyverse)
+
 test1 <- dir("trial_merge", full.names = T) %>% map_df(read_table, .id = NULL)
 
 test1<- test1 %>% select(-42,-41,-40,-39)
@@ -9,6 +10,9 @@ test1<- test1 %>% filter(MPVPosition == as.integer(MPVPosition))
 
 test1$MPVPosition <- as.factor(test1$MPVPosition)
 
+write.table(test1, "test1.dat")
+
+FS_test1 <- read.table("test1.dat")
 
 #Box_Plots
 plot(CO2~MPVPosition, data=test1, main = "MPVxCO2")
