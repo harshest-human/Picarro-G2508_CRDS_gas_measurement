@@ -1,16 +1,62 @@
+# Set the working directory to the folder containing the subfolders
+setwd("D:/Data Analysis/Picarro-G2508_CRDS_gas_measurement")
 getwd()
 library(tidyverse)
 library(reshape2)
 library(hablar)
 library(lubridate)
 library(psych)
-library(rmarkdown)
 library(ggplot2)
 library(readxl)
 library(dplyr)
 library(ggpubr)
+library(readr)
+library(zip)
+library(data.table)
+library(purrr)
 
-picarro_input <- read.table("trial23-24.11.21-DataLog_User.dat", header = T) 
+# Set the working directory to the folder containing the subfolders
+setwd("D:/Data Analysis/Picarro-G2508_CRDS_gas_measurement/picrarro_G2509_june_2023")
+
+# Get a list of subfolders
+subfolders <- c("01", "02", "03", "04", "05")
+
+# Create an empty data frame to store the combined data
+combined_data <- data.frame()
+
+# Loop through each subfolder
+for (subfolder in subfolders) {
+        # Set the working directory to the current subfolder
+        setwd(subfolder)
+        
+        # Get a list of .dat files in the current subfolder
+        dat_files <- list.files(pattern = "\\.dat$")
+        
+        # Loop through each .dat file
+        for (dat_file in dat_files) {
+                # Read the data from the current .dat file
+                data <- read.table(dat_file, header = TRUE)  # Modify the parameters if needed
+                
+                # Append the data to the combined_data data frame
+                combined_data <- rbind(combined_data, data)
+        }
+        
+        # Return to the parent folder
+        setwd("..")
+}
+
+# Write the combined data to a CSV file
+write.csv(combined_data, "picarro_combined_june_2023_data.csv", row.names = FALSE)
+
+
+
+
+
+combined_data <- read_csv("D:/Data Analysis/Picarro-G2508_CRDS_gas_measurement/combined_data.csv")
+
+picarro_input <- read_csv("combined_data.csv") 
+
+
 picarro_input <- select(picarro_input, DATE, TIME,MPVPosition, N2O, CO2, CH4, H2O, NH3) 
 picarro_input <- picarro_input %>% 
         filter(MPVPosition == as.integer(MPVPosition)) %>%
