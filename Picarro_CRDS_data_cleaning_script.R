@@ -49,17 +49,18 @@ mergeDATFiles <- function(input_path, output_path, result_file_name) {
 
 
 # Example usage
-input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw"
-output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-result_file_name <- "2023-12-19_2024-01-22_picarro_data"
-CRDS_data <- mergeDATFiles(input_path, output_path, result_file_name)
+#input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw"
+#output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
+#result_file_name <- "2023-12-19_2024-01-22_picarro_data"
+#CRDS_data <- mergeDATFiles(input_path, output_path, result_file_name)
 
 
 ####### Data Processing ########
+# import the dataset
 CRDS_data <- read.table("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2023-12-19_2024-01-22_picarro_data.dat", sep="", header = TRUE)
 
 # Remove non-integer values from MPVPosition and convert to factor
-CRDS_data$MPVPosition <- as.factor(CRDS_data$MPVPosition[grepl("^\\d+$", CRDS_data$MPVPosition)])
+CRDS_data <-  filter(CRDS_data, MPVPosition %% 1 == 0 & MPVPosition != 0)
 
 # Convert N2O, CO2, CH4, H2O, NH3 to numeric
 numeric_columns <- c("N2O", "CO2", "CH4", "H2O", "NH3")
@@ -71,10 +72,17 @@ CRDS_data$Date.Time <- as.POSIXct(paste(CRDS_data$DATE, CRDS_data$TIME), format 
 # Select specific columns
 CRDS_data <- select(CRDS_data, Date.Time, MPVPosition, N2O, CO2, CH4, H2O, NH3,-c(DATE, TIME))
 
-# Plotting using ggline
-ggline(CRDS_data, x="MPVPosition", y="CO2", add = "mean_se")
+#Remove outliers (1.5 IQR)
+remove_outliers_function <- source("remove_outliers_function.R")
+CRDS_data$CO2 <- remove_outliers(CRDS_data$CO2)
+CRDS_data$CH4 <- remove_outliers(CRDS_data$CH4)
+CRDS_data$NH3 <- remove_outliers(CRDS_data$NH3)
 
-# Plotting using ggplot2 
-ggplot(CRDS_data, aes(x=MPVPosition, y=CO2)) + geom_boxplot()
 
 ####### Data Analysis ########
+# Plotting using ggplot2 
+CRDS_data$MPVPosition <- as.factor(CRDS_data$MPVPosition)
+ggplot(CRDS_data, aes(x=MPVPosition, y=CO2)) + geom_boxplot()
+
+# Plotting using ggline
+ggline(CRDS_data, x="MPVPosition", y="CO2", add = "mean_se")
