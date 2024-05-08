@@ -5,6 +5,7 @@ library(progress)
 library(ggplot2)
 library(ggpubr)
 
+
 ####### Development of function ########
 # Function to merge data files
 mergeDATFiles <- function(input_path, output_path, result_file_name) {
@@ -80,6 +81,7 @@ CRDS_data$NH3 <- remove_outliers(CRDS_data$NH3)
 
 
 ####### Data Analysis ########
+
 # Plotting using ggplot2 
 CRDS_data$MPVPosition <- as.factor(CRDS_data$MPVPosition)
 ggplot(CRDS_data, aes(x=MPVPosition, y=CO2)) + geom_boxplot()
