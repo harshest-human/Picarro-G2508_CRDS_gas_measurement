@@ -17,13 +17,13 @@ source("Picarro_CRDS_data_cleaning_script.R")
 input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508"
 output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
 result_file_name <- "2024-06-03_2024-06-11_CRDS.P8"
-CRDS.P8 <- picarro_concatenate(input_path, output_path, result_file_name)
+CRDS.P8 <- piconcatenate(input_path, output_path, result_file_name)
 
 #Picarro G2509
 input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509"
 output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
 result_file_name <- "2024-06-03_2024-06-11_CRDS.P9"
-CRDS.P9 <- picarro_concatenate(input_path, output_path, result_file_name)
+CRDS.P9 <- piconcatenate(input_path, output_path, result_file_name)
 
 
 # Import the dataset and filter by measurement campaign
@@ -31,11 +31,20 @@ cleaned.P8_data <- piclean(CRDS.P8)
 cleaned.P9_data <- piclean(CRDS.P9) 
 
 # Merge the two data frames by Date.Time
-joined_data <- full_join(cleaned.P8_data, cleaned.P9_data, by = "DATE.TIME")
+#joined_data <- full_join(cleaned.P8_data, cleaned.P9_data, by = "DATE.TIME")
 
 
 # Write the combined data to a .dat file with well-spaced formatting
 #write.table(joined_data, "joined_data", sep = ",", row.names = FALSE)
+
+
+
+
+
+
+
+
+
 
 
 ####### Data Analysis ########
