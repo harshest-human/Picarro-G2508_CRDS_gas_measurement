@@ -14,21 +14,21 @@ source("Picarro_CRDS_data_cleaning_script.R")
 
 ####### Data concatenating ########
 #Picarro G2508 
-input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508"
-output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-result_file_name <- "2024-06-03_2024-06-11_CRDS.P8"
-CRDS.P8 <- piconcatenate(input_path, output_path, result_file_name)
+#input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508"
+#output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
+#result_file_name <- "2024-06-03_2024-06-11_CRDS.P8"
+#CRDS.P8 <- piconcatenate(input_path, output_path, result_file_name)
 
 #Picarro G2509
-input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509"
-output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-result_file_name <- "2024-06-03_2024-06-11_CRDS.P9"
-CRDS.P9 <- piconcatenate(input_path, output_path, result_file_name)
+##input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509"
+#output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
+#result_file_name <- "2024-06-03_2024-06-11_CRDS.P9"
+#CRDS.P9 <- piconcatenate(input_path, output_path, result_file_name)
 
 
 ####### Data cleaning ########
 #Picarro G2508
-cleaned.P8_data <- piclean(CRDS.P8) 
+cleaned.P8_data <- piclean("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024-06-03_2024-06-11_CRDS.P8.dat") 
 cleaned.P8_data <- cleaned.P8_data %>%
 rename_with(~paste0(., ".P8"), -DATE.TIME)
 
@@ -45,6 +45,10 @@ data.table::setDT(cleaned.P9_data)
 
 # Combine two dataframes by nearest times using library(data.table)
 CRDS.comb <- cleaned.P8_data[cleaned.P9_data, on = .(DATE.TIME), roll = "nearest"]
+
+write.csv(CRDS.comb, "CRDS.comb.csv", row.names = FALSE)
+
+CRDS.comb <- read.csv("CRDS.comb.csv")
 
 
 ####### Data Analysis ########
