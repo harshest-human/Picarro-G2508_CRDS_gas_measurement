@@ -1,6 +1,7 @@
 # Libraries
 library(dplyr)
 library(lubridate)
+library(progress)
 
 ####### Development of concatenate function ########
 # Function to append and process data files
@@ -48,49 +49,71 @@ piconcatenate <- function(input_path, output_path, result_file_name) {
 #result_file_name <- "2024-06-03_2024-06-11_Picarro08"
 #CRDS_data <- piconcatenate(input_path, output_path, result_file_name)
 
-####### Development of clean function ########
+####### Development of picarro clean function ########
 piclean <- function(df) {
+        library(dplyr)
+        library(lubridate)
         
         # Select required columns
+        cat("Selecting required columns...\n")
         df <- df[, c("DATE", "TIME", "MPVPosition", "N2O", "CO2", "CH4", "H2O", "NH3")]
+        
+        # Merge DATE and TIME into DATE.TIME
+        cat("Merging DATE and TIME column...\n")
+        df <- df %>%
+                mutate(DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S")) %>%
+                select(DATE.TIME, MPVPosition, N2O, CO2, CH4, H2O, NH3)
         
         # Ask for start and end date-time
         start_date_time <- as.POSIXct(readline(prompt = "Enter the start date-time (YYYY-MM-DD HH:MM:SS): "), format = "%Y-%m-%d %H:%M:%S")
         end_date_time <- as.POSIXct(readline(prompt = "Enter the end date-time (YYYY-MM-DD HH:MM:SS): "), format = "%Y-%m-%d %H:%M:%S")
         
-        # Merge DATE and TIME into DATE.TIME
-        df$DATE.TIME <- as.POSIXct(paste(df$DATE, df$TIME), format = "%Y-%m-%d %H:%M:%S")
-        
         # Filter data based on the provided date-time range
+        cat("Filtering data...\n")
         df <- df %>%
                 filter(DATE.TIME >= start_date_time & DATE.TIME <= end_date_time)
         
-        # Count and print non-integer MPVPosition values
+        # Print non-integer MPVPosition values
         non_integer_mpv <- sum(df$MPVPosition %% 1 != 0)
         total_mpv <- nrow(df)
         non_integer_percentage <- (non_integer_mpv / total_mpv) * 100
-        cat("Non-integer MPVPosition values =", non_integer_mpv, "/", total_mpv, "(", round(non_integer_percentage, 2), "%)", "\n")
         
-        # Ask whether to remove non-integer MPVPosition values
-        remove_non_integer <- readline(prompt = "Do you want to omit the non-integer MPVPosition values? (y/n): ")
-        if (tolower(remove_non_integer) == "y") {
-                df <- df %>% filter(MPVPosition %% 1 == 0)
+        cat("Non-integer MPVPosition values removed =", non_integer_mpv, "/", total_mpv, "(", round(non_integer_percentage, 2), "%)", "\n")
+        
+        # Remove non-integer MPVPosition values
+        df <- df %>% filter(MPVPosition %% 1 == 0)
+        
+        # Check number of observations
+        n_obs <- nrow(df)
+        time_diff_seconds <- as.numeric(difftime(end_date_time, start_date_time, units = "secs"))
+        
+        # If number of observations doesn't match seconds between start and end time, take averages
+        if (n_obs != time_diff_seconds + 1) {
+                cat("Warning: Number of observations (", n_obs, ") does not match total seconds between start and end time (", time_diff_seconds + 1, ").\n")
+                cat("Time series processing: Rounding-off to observation per second.\n")
+                
+                # Aggregate data to handle duplicate seconds
+                df <- df %>%
+                        group_by(DATE.TIME) %>%
+                        summarise_all(mean) %>%
+                        ungroup() %>%
+                        arrange(DATE.TIME) %>%
+                        select(-starts_with("X"))
         }
         
-        # Convert MPVPosition to factor and other columns to numeric
-        df$MPVPosition <- as.factor(df$MPVPosition)
-        numeric_columns <- c("N2O", "CO2", "CH4", "H2O", "NH3")
-        df[numeric_columns] <- lapply(df[numeric_columns], as.numeric)
-        
-        # Aggregate data
-        df_aggregated <- df %>%
-                group_by(MPVPosition) %>%
+        # Further aggregate data by grouping MPVPosition
+        cat("Further aggregating data by MPVPosition...\n")
+        df <- df %>%
                 arrange(DATE.TIME) %>%
-                mutate(Interval = floor(as.numeric(difftime(DATE.TIME, min(DATE.TIME), units = "secs")) / 240)) %>%
-                filter(as.numeric(difftime(DATE.TIME, min(DATE.TIME), units = "secs")) %% 240 >= 60) %>%
+                group_by(MPVPosition) %>%
+                mutate(
+                        Interval = cumsum(c(0, diff(DATE.TIME) > 60)),  # Identify intervals where time difference is greater than 60 seconds
+                        RowNum = row_number()  # Number of rows within each group
+                ) %>%
+                filter(RowNum > 60) %>%  # Skip the first 60 observations
                 group_by(MPVPosition, Interval) %>%
                 summarise(
-                        DATE.TIME = max(DATE.TIME),
+                        DATE.TIME = last(DATE.TIME),  # Use the last timestamp before switching MPVPosition
                         N2O = mean(N2O, na.rm = TRUE),
                         CO2 = mean(CO2, na.rm = TRUE),
                         CH4 = mean(CH4, na.rm = TRUE),
@@ -101,10 +124,14 @@ piclean <- function(df) {
                 select(DATE.TIME, MPVPosition, N2O, CO2, CH4, H2O, NH3) %>%
                 arrange(DATE.TIME)
         
-        return(df_aggregated)
+        # Print final message
+        cat("Data has been successfully processed.\n")
+        cat("Dataframe contains", ncol(df), "variables:\n", colnames(df), "\n")
+        
+        # Return processed dataframe
+        return(df)
 }
 
 
 # Example usage:
-#CRDS_cleaned_data <- piclean(CRDS_data)
-
+#CRDS_cleaned_data <- piclean(CRDS_Data)
