@@ -36,14 +36,20 @@ CRDS.P9 <- CRDS.P9 %>% rename_with(~paste0(., ".P9"), -DATE.TIME) # Add Suffix
 
 ####### Data combining ########
 # Set data as data.table
-data.table::setDT(cleaned.P8_data)
-data.table::setDT(cleaned.P9_data)
+data.table::setDT(CRDS.P8)
+data.table::setDT(CRDS.P9)
 
 CRDS.P8$DATE.TIME = as.POSIXct(CRDS.P8$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
 CRDS.P9$DATE.TIME = as.POSIXct(CRDS.P9$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
 
 # Combine two dataframes by nearest times using library(data.table)
 CRDS.comb <- CRDS.P8[CRDS.P9, on = .(DATE.TIME), roll = "nearest"]
+
+# Convert ppb to ppm 
+CRDS.comb <- CRDS.comb %>%
+        mutate(across(c("NH3.P8", "NH3.P9"), ~ . / 1000))
+
+# write
 write.csv(CRDS.comb, "CRDS.comb.csv", row.names = FALSE)
 CRDS.comb <- fread("CRDS.comb.csv")
 
@@ -78,19 +84,5 @@ ggline(CRDS.comb, x = "MPVPosition.P9", y = "CO2.P9",
        xlab = "MPVPosition", ylab = "CO2 Mean",
        legend = "right")
 
-
-############ HEAT MAP #############
-
-# Melt data to long format for heatmap
-melted_data <-melt(CRDS.comb, id.vars = c("MPVPosition.P8", "MPVPosition.P9"),
-                   measure.vars = c("CO2.P8", "CO2.P9"),
-                   variable.name = "GasType", value.name = "MeanValue")
-
-# Plot heatmap
-ggplot(melted_data, aes(x = MPVPosition.P8, y = MPVPosition.P9, fill = MeanValue)) +
-        geom_tile(color = "white") +
-        scale_fill_gradient(low = "white", high = "blue") +
-        labs(x = "MPVPosition.P8", y = "MPVPosition.P9", fill = "Mean CO2") +
-        theme_minimal()
 
 
