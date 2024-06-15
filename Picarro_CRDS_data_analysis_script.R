@@ -12,30 +12,26 @@ library(readr)
 library(data.table)
 source("Picarro_CRDS_data_cleaning_script.R")
 
-####### Data concatenating ########
+####### Data importing and cleaning ########
 #Picarro G2508 
 #input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508"
 #output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-#result_file_name <- "2024-06-03_2024-06-11_CRDS.P8"
-#CRDS.P8 <- piconcatenate(input_path, output_path, result_file_name)
+#result_file_name <- "2024-06-03_2024-06-11_Picarro08"
+#start_date_time <- as.POSIXct("2024-06-03 15:13:00", format = "%Y-%m-%d %H:%M:%S")
+#end_date_time <- as.POSIXct("2024-06-10 15:13:00", format = "%Y-%m-%d %H:%M:%S")
+#CRDS.P8 <- piclean(input_path, output_path, result_file_name, start_date_time, end_date_time)
+CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024-06-03_2024-06-11_Picarro08.csv")
+CRDS.P8 <- CRDS.P8 %>% rename_with(~paste0(., ".P8"), -DATE.TIME) # Add Suffix
 
 #Picarro G2509
-##input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509"
+#input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509"
 #output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-#result_file_name <- "2024-06-03_2024-06-11_CRDS.P9"
-#CRDS.P9 <- piconcatenate(input_path, output_path, result_file_name)
-
-
-####### Data cleaning ########
-#Picarro G2508
-cleaned.P8_data <- piclean("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024-06-03_2024-06-11_CRDS.P8.dat") 
-cleaned.P8_data <- cleaned.P8_data %>%
-rename_with(~paste0(., ".P8"), -DATE.TIME)
-
-#Picarro G2509
-cleaned.P9_data <- piclean(CRDS.P9) 
-cleaned.P9_data <- cleaned.P9_data %>%
-        rename_with(~paste0(., ".P9"), -DATE.TIME)
+#result_file_name <- "2024-06-03_2024-06-11_Picarro09"
+#start_date_time <- as.POSIXct("2024-06-03 15:13:00", format = "%Y-%m-%d %H:%M:%S")
+#end_date_time <- as.POSIXct("2024-06-10 15:13:00", format = "%Y-%m-%d %H:%M:%S")
+#CRDS.P9 <- piclean(input_path, output_path, result_file_name, start_date_time, end_date_time)
+CRDS.P9 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024-06-03_2024-06-11_Picarro09.csv")
+CRDS.P9 <- CRDS.P9 %>% rename_with(~paste0(., ".P9"), -DATE.TIME) # Add Suffix
 
 
 ####### Data combining ########
@@ -43,12 +39,13 @@ cleaned.P9_data <- cleaned.P9_data %>%
 data.table::setDT(cleaned.P8_data)
 data.table::setDT(cleaned.P9_data)
 
+CRDS.P8$DATE.TIME = as.POSIXct(CRDS.P8$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
+CRDS.P9$DATE.TIME = as.POSIXct(CRDS.P9$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
+
 # Combine two dataframes by nearest times using library(data.table)
-CRDS.comb <- cleaned.P8_data[cleaned.P9_data, on = .(DATE.TIME), roll = "nearest"]
-
+CRDS.comb <- CRDS.P8[CRDS.P9, on = .(DATE.TIME), roll = "nearest"]
 write.csv(CRDS.comb, "CRDS.comb.csv", row.names = FALSE)
-
-CRDS.comb <- read.csv("CRDS.comb.csv")
+CRDS.comb <- fread("CRDS.comb.csv")
 
 
 ####### Data Analysis ########
