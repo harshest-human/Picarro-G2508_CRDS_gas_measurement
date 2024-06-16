@@ -89,6 +89,9 @@ CRDS.test <- CRDS.test %>%
                 CH4 = mean(CH4, na.rm = TRUE),
                 H2O = mean(H2O, na.rm = TRUE),
                 NH3 = mean(NH3, na.rm = TRUE))
+# Convert ppb to ppm 
+CRDS.test <- CRDS.test %>%
+        mutate(across(c("NH3"), ~ . / 1000))
 
 # Add Suffix
 CRDS.test <- CRDS.test %>% rename_with(~paste0(., ".P8"), -DATE.TIME)
