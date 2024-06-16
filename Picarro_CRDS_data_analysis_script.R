@@ -54,35 +54,50 @@ write.csv(CRDS.comb, "CRDS.comb.csv", row.names = FALSE)
 CRDS.comb <- fread("CRDS.comb.csv")
 
 
-####### Data Analysis ########
-#Remove outliers (1.5 IQR)
-#remove_outliers_function <- source("remove_outliers_function.R")
-#CRDS.P8_data$CO2 <- remove_outliers(CRDS.P8_data$CO2)
-#CRDS.P8_data$CH4 <- remove_outliers(CRDS.P8_data$CH4)
-#CRDS.P8_data$NH3 <- remove_outliers(CRDS.P8_data$NH3)
+############ CRDS Test ###########
+# function variables 
+input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2024/05"
+output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
+result_file_name <- "2024-05-15_2024-05-17_CRDS.test"
+start_date_time <- as.POSIXct("2024-05-15 12:39:56", format = "%Y-%m-%d %H:%M:%S")
+end_date_time <- as.POSIXct("2024-05-17 09:39:05", format = "%Y-%m-%d %H:%M:%S")
 
-# Plotting using ggplot2 
-ggplot(CRDS.comb, aes(x = factor(MPVPosition.P8), y = CO2.P8)) +
-        geom_boxplot(aes(color = "MPVPosition.P8"), alpha = 0.5) +
-        geom_boxplot(aes(x = factor(MPVPosition.P9), y = CO2.P9, color = "MPVPosition.P9"), alpha = 0.5) +
-        labs(x = "MPVPosition", y = "CO2 Mean") +
-        scale_color_manual(values = c("MPVPosition.P8" = "blue", "MPVPosition.P9" = "red"), 
-                           labels = c("MPVPosition.P8", "MPVPosition.P9")) +
-        theme_minimal()
+# clean files
+CRDS.test <- piconcatenate(input_path, output_path, result_file_name)
 
-# Plotting using ggline
-ggline(CRDS.comb, x = "MPVPosition.P8", y = "CO2.P8",
-       add = "mean_se",
-       linetype = "solid",
-       xlab = "MPVPosition", ylab = "CO2 Mean",
-       legend = "right") 
+# read csv
+CRDS.test <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024-05-15_2024-05-17_CRDS.test.csv")
 
-# Plotting using ggline
-ggline(CRDS.comb, x = "MPVPosition.P9", y = "CO2.P9",
-       add = "mean_se",
-       linetype = "solid",
-       xlab = "MPVPosition", ylab = "CO2 Mean",
-       legend = "right")
+CRDS.test <- CRDS.test %>%
+        mutate(DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S")) %>%
+        select(DATE.TIME, MPVPosition, N2O, CO2, CH4, H2O, NH3)
+
+
+CRDS.test <- CRDS.test %>%
+        filter(DATE.TIME >= start_date_time & DATE.TIME <= end_date_time)
+
+CRDS.test <- CRDS.test %>% filter(MPVPosition %% 1 == 0)
+
+CRDS.test <- CRDS.test %>%
+        mutate(DATE.TIME = floor_date(DATE.TIME, "4 minutes"))
+
+CRDS.test <- CRDS.test %>%
+        group_by(DATE.TIME) %>%
+        summarize(MPVPosition = mean(MPVPosition, na.rm = TRUE),
+                N2O = mean(N2O, na.rm = TRUE),
+                CO2 = mean(CO2, na.rm = TRUE),
+                CH4 = mean(CH4, na.rm = TRUE),
+                H2O = mean(H2O, na.rm = TRUE),
+                NH3 = mean(NH3, na.rm = TRUE))
+
+# Add Suffix
+CRDS.test <- CRDS.test %>% rename_with(~paste0(., ".P8"), -DATE.TIME)
+
+# write
+write.csv(CRDS.test, "CRDS.test.csv", row.names = FALSE)
+CRDS.test <- fread("CRDS.test.csv")
+
+
 
 
 
