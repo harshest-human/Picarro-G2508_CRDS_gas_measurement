@@ -34,7 +34,7 @@ piconcatenate <- function(input_path, output_path, result_file_name) {
         merged_data <- do.call(rbind, list_of_data_frames)
         
         # Construct the full output path with .dat extension
-        full_output_path <- file.path(output_path, paste0(result_file_name, ".dat"))
+        full_output_path <- file.path(output_path, paste0(result_file_name, ".csv"))
         
         # Write the merged data to a .dat file
         write.table(merged_data, full_output_path, sep = " ", row.names = FALSE)
