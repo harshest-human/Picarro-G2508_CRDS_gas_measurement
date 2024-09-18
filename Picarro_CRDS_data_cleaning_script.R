@@ -164,10 +164,10 @@ piclean <- function(input_path, output_path, result_file_name, start_date_time, 
 
 # Example usage
 
-#input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508"
-#output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-#result_file_name <- "2024-06-03_2024-06-11_Picarro08"
-#start_date_time <- as.POSIXct("2024-06-03 15:13:00", format = "%Y-%m-%d %H:%M:%S")
-#end_date_time <- as.POSIXct("2024-06-10 15:13:00", format = "%Y-%m-%d %H:%M:%S")
-#CRDS.P8 <- piclean(input_path, output_path, result_file_name, start_date_time, end_date_time)
+input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509"
+output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
+result_file_name <- "2024-08-27_2024-09-18_Picarro09"
+#start_date_time <- as.POSIXct("2024-08-27 11:59:00", format = "%Y-%m-%d %H:%M:%S")
+#end_date_time <- as.POSIXct("2024-09-18 11:59:00", format = "%Y-%m-%d %H:%M:%S")
+#CRDS.P8 <- piconcatenate(input_path, output_path, result_file_name)
 #CRDS.P8 <- read.csv("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024-06-03_2024-06-11_Picarro08.csv")
