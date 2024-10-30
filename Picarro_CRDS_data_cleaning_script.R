@@ -50,22 +50,26 @@ piclean <- function(input_path, output_path, result_file_name, columns) {
                 select(-DATE, -TIME)  # Remove DATE and TIME columns
         
         # Check for non-integer MPVPosition values
-        non_integer_mpv <- sum(merged_data$MPVPosition %% 1 != 0)
+        non_integer_mpv <- sum(merged_data$MPVPosition %% 1 != 0, na.rm = TRUE)
         total_mpv <- nrow(merged_data)
         
         cat("Removing non-integer MPVPosition values...\n")
         
         # Print the count and percentage of non-integer MPVPosition values
-        if (non_integer_mpv > 0) {
-                non_integer_percentage <- (non_integer_mpv / total_mpv) * 100
-                cat("Non-integer MPVPosition values found =", non_integer_mpv, "/", total_mpv, "(", round(non_integer_percentage, 2), "%)", "\n")
-                
-                # Remove non-integer MPVPosition values
-                merged_data <- merged_data %>% filter(MPVPosition %% 1 == 0)
-                
-                cat("Non-integer MPVPosition values removed. Remaining rows:", nrow(merged_data), "\n")
+        if (total_mpv > 0) {
+                if (non_integer_mpv > 0) {
+                        non_integer_percentage <- (non_integer_mpv / total_mpv) * 100
+                        cat("Non-integer MPVPosition values found =", non_integer_mpv, "/", total_mpv, "(", round(non_integer_percentage, 2), "%)", "\n")
+                        
+                        # Remove non-integer MPVPosition values
+                        merged_data <- merged_data %>% filter(MPVPosition %% 1 == 0)
+                        
+                        cat("Non-integer MPVPosition values removed. Remaining rows:", nrow(merged_data), "\n")
+                } else {
+                        cat("No non-integer MPVPosition values found.\n")
+                }
         } else {
-                cat("No non-integer MPVPosition values found.\n")
+                cat("No rows available for processing.\n")
         }
         
         # Check number of observations
@@ -85,8 +89,6 @@ piclean <- function(input_path, output_path, result_file_name, columns) {
         # Return processed dataframe (optional, but generally not needed after writing to file)
         # return(merged_data)
 }
-
-
 
 
 #### Example usage
