@@ -82,7 +82,8 @@ piclean <- function(input_path, output_path, result_file_name) {
                         OutletValve = last(OutletValve)  # Take the last status of OutletValve
                 ) %>%
                 ungroup() %>%
-                select(DATE.TIME, MPVPosition, N2O, CO2, CH4, H2O, NH3, OutletValve)
+                select(DATE.TIME, MPVPosition, N2O, CO2, CH4, H2O, NH3, OutletValve) %>%
+                arrange(DATE.TIME)  # Sort by DATE.TIME in final output
         
         # Construct the full output path with .dat extension
         full_output_path <- file.path(output_path, paste0(result_file_name, ".dat"))
@@ -98,8 +99,6 @@ piclean <- function(input_path, output_path, result_file_name) {
         # Optionally, return the processed dataframe
         return(processed_data)
 }
-
-
 
 
 
