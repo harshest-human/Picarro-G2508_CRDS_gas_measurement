@@ -54,12 +54,17 @@ piclean <- function(input_path, output_path, result_file_name) {
         
         # Check for and remove non-integer MPVPosition values
         cat("Removing non-integer MPVPosition values...\n")
-        non_integer_mpv <- sum(merged_data$MPVPosition %% 1 != 0)
+        
+        # Identify non-integer values
+        non_integer_mpv <- sum(!is.na(merged_data$MPVPosition) & merged_data$MPVPosition %% 1 != 0)
         total_mpv <- nrow(merged_data)
         non_integer_percentage <- (non_integer_mpv / total_mpv) * 100
+        
+        # Log the count and percentage of non-integer values
         cat("Non-integer MPVPosition values removed =", non_integer_mpv, "/", total_mpv, "(", round(non_integer_percentage, 2), "%)", "\n")
         
-        merged_data <- merged_data %>% filter(MPVPosition %% 1 == 0)
+        # Filter out rows with non-integer MPVPosition values
+        merged_data <- merged_data %>% filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0)
         
         # Temporally average each MPVPosition over 4-minute intervals, taking last 180 seconds if available
         cat("Averaging data at each MPVPosition interval...\n")
@@ -81,8 +86,10 @@ piclean <- function(input_path, output_path, result_file_name) {
                         NH3 = mean(NH3, na.rm = TRUE) / 1000,  # Divide NH3 by 1000
                         OutletValve = last(OutletValve)  # Take the last status of OutletValve
                 ) %>%
+                rename_with(~paste0(., ".P8"), -DATE.TIME) %>%  # Add the suffix `.P8` to all columns except DATE.TIME
                 ungroup() %>%
-                select(DATE.TIME, MPVPosition, N2O, CO2, CH4, H2O, NH3, OutletValve) %>%
+                select(DATE.TIME, everything()) %>%
+                select(-Interval.P8) %>%
                 arrange(DATE.TIME)  # Sort by DATE.TIME in final output
         
         # Construct the full output path with .dat extension
