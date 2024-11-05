@@ -78,7 +78,7 @@ piclean <- function(input_path, output_path, result_file_name) {
                         CO2 = mean(CO2, na.rm = TRUE),
                         CH4 = mean(CH4, na.rm = TRUE),
                         H2O = mean(H2O, na.rm = TRUE),
-                        NH3 = mean(NH3, na.rm = TRUE),
+                        NH3 = mean(NH3, na.rm = TRUE) / 1000,  # Divide NH3 by 1000
                         OutletValve = last(OutletValve)  # Take the last status of OutletValve
                 ) %>%
                 ungroup() %>%
@@ -99,8 +99,6 @@ piclean <- function(input_path, output_path, result_file_name) {
         # Optionally, return the processed dataframe
         return(processed_data)
 }
-
-
 
 
 #### Example usage
