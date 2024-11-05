@@ -84,12 +84,10 @@ piclean <- function(input_path, output_path, result_file_name) {
                         CH4 = mean(CH4, na.rm = TRUE),
                         H2O = mean(H2O, na.rm = TRUE),
                         NH3 = mean(NH3, na.rm = TRUE) / 1000,  # Divide NH3 by 1000
-                        OutletValve = last(OutletValve)  # Take the last status of OutletValve
+                        OutletValve = last(OutletValve) # Take the last status of OutletValve
                 ) %>%
-                rename_with(~paste0(., ".P8"), -DATE.TIME) %>%  # Add the suffix `.P8` to all columns except DATE.TIME
-                ungroup() %>%
                 select(DATE.TIME, everything()) %>%
-                select(-Interval.P8) %>%
+                select(-Interval) %>%
                 arrange(DATE.TIME)  # Sort by DATE.TIME in final output
         
         # Construct the full output path with .dat extension
