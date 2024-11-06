@@ -31,8 +31,8 @@ data.table::setDT(CRDS.P9)
 
 
 # Filter rows by 'DATE.TIME' range before merging
-start_date <- as.POSIXct("2024-07-01 00:00:00")  # Set start date
-end_date <- as.POSIXct("2024-07-31 23:59:59")  # Set end date
+start_date <- as.POSIXct("2024-08-01 00:00:00")  # Set start date
+end_date <- as.POSIXct("2024-08-26 13:55:59")  # Set end date
 
 
 CRDS.P8$DATE.TIME = as.POSIXct(CRDS.P8$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
@@ -42,21 +42,21 @@ CRDS.P8 <- CRDS.P8[DATE.TIME >= start_date & DATE.TIME <= end_date]
 CRDS.P9 <- CRDS.P9[DATE.TIME >= start_date & DATE.TIME <= end_date]
 
 # Merge using nearest timestamp, filling missing values using 'na.locf' or other methods
-CRDS.comb <- CRDS.P8[CRDS.P9, on = "DATE.TIME", roll = "nearest"]
+#CRDS.comb <- CRDS.P8[CRDS.P9, on = "DATE.TIME", roll = "nearest"] #NOTE: CRDS.P8 does not have enough observations in August
 
 
 # write
-write.csv(CRDS.comb, "2024_July_CRDS.comb.csv", row.names = FALSE)
+write.csv(CRDS.P9, "2024_August_CRDS.P9.csv", row.names = FALSE) #NOTE: This df only has CRDS.P9 observations!
 
 
 # Summary Statistics
 # Count observations for each unique position in MPVPosition.P8
-count_p8 <- CRDS.comb %>%
-        group_by(MPVPosition.P8) %>%
-        summarise(count = n())
+#count_p8 <- CRDS.comb %>%
+        #group_by(MPVPosition.P8) %>%
+        #summarise(count = n())
 
 # Count observations for each unique position in MPVPosition.P9
-count_p9 <- CRDS.comb %>%
-        group_by(MPVPosition.P9) %>%
-        summarise(count = n())
+#count_p9 <- CRDS.comb %>%
+        #group_by(MPVPosition.P9) %>%
+        #summarise(count = n())
 
