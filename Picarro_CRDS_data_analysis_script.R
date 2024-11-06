@@ -10,6 +10,8 @@ library(dplyr)
 library(ggpubr)
 library(readr)
 library(data.table)
+library(summarytools)
+library(Hmisc)
 source("Picarro_CRDS_data_cleaning_script.R")
 
 ####### Data importing and cleaning ########
@@ -46,8 +48,17 @@ CRDS.comb <- CRDS.P8[CRDS.P9, on = "DATE.TIME", roll = "nearest"]
 
 
 # write
-write.csv(CRDS.comb, "2024_June_CRDS.comb.csv", row.names = FALSE)
+#write.csv(CRDS.comb, "2024_June_CRDS.comb.csv", row.names = FALSE)
 
 
+# Summary Statistics
+# Count observations for each unique position in MPVPosition.P8
+count_p8 <- CRDS.comb %>%
+        group_by(MPVPosition.P8) %>%
+        summarise(count = n())
 
+# Count observations for each unique position in MPVPosition.P9
+count_p9 <- CRDS.comb %>%
+        group_by(MPVPosition.P9) %>%
+        summarise(count = n())
 
