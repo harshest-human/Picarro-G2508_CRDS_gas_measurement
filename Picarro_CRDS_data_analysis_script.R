@@ -33,8 +33,8 @@ data.table::setDT(CRDS.P9)
 
 
 # Filter rows by 'DATE.TIME' range before merging
-start_date <- as.POSIXct("2024-06-03 15:16:50")  # Set start date
-end_date <- as.POSIXct("2024-06-30 23:59:59")  # Set end date
+start_date <- as.POSIXct("2024-07-01 00:00:00")  # Set start date
+end_date <- as.POSIXct("2024-07-31 23:59:59")  # Set end date
 
 
 CRDS.P8$DATE.TIME = as.POSIXct(CRDS.P8$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
@@ -48,7 +48,7 @@ CRDS.comb <- CRDS.P8[CRDS.P9, on = "DATE.TIME", roll = "nearest"]
 
 
 # write
-#write.csv(CRDS.comb, "2024_June_CRDS.comb.csv", row.names = FALSE)
+write.csv(CRDS.comb, "2024_August_CRDS.comb.csv", row.names = FALSE)
 
 
 # Summary Statistics
