@@ -10,8 +10,6 @@ library(dplyr)
 library(ggpubr)
 library(readr)
 library(data.table)
-library(summarytools)
-library(Hmisc)
 source("Picarro_CRDS_data_cleaning_script.R")
 
 ####### Data importing and cleaning ########
@@ -48,7 +46,7 @@ CRDS.comb <- CRDS.P8[CRDS.P9, on = "DATE.TIME", roll = "nearest"]
 
 
 # write
-write.csv(CRDS.comb, "2024_August_CRDS.comb.csv", row.names = FALSE)
+write.csv(CRDS.comb, "2024_July_CRDS.comb.csv", row.names = FALSE)
 
 
 # Summary Statistics
