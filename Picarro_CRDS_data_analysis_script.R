@@ -46,7 +46,7 @@ CRDS.comb <- CRDS.P8[CRDS.P9, on = "DATE.TIME", roll = "nearest"]
 
 
 # write
-write.csv(CRDS.P9, "2024_Sep_Oct_CRDS.comb.csv", row.names = FALSE) 
+write.csv(CRDS.comb, "2024_Sep_Oct_CRDS.comb.csv", row.names = FALSE) 
 
 
 # Summary Statistics
