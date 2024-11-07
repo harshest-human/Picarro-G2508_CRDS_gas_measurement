@@ -12,6 +12,7 @@ library(readr)
 library(data.table)
 source("Picarro_CRDS_data_cleaning_script.R")
 
+
 ####### Data importing and cleaning ########
 #Picarro G2508 
 input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508"
@@ -63,5 +64,48 @@ write.csv(CRDS.P9, "CRDS.P9_outside.csv", row.names = FALSE)
 
 
 
+################ hourly average for inside and oustide from CRDS in September ##################
 
+
+######## Import Gas Data #########
+CRDS.in <- fread("CRDS.P8_inside.csv")
+CRDS.out <- fread("CRDS.P9_outside.csv")
+
+CRDS.in <- CRDS.in  %>% filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0)
+CRDS.out <- CRDS.out  %>% filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0)
+
+CRDS.in <- CRDS.in %>%
+        mutate(hour = floor_date(DATE.TIME, unit = "hour")) %>%
+        group_by(hour) %>%
+        summarise(
+                CO2.in = mean(CO2, na.rm = TRUE),
+                CH4.in = mean(CH4, na.rm = TRUE),
+                NH3.in = mean(NH3, na.rm = TRUE),
+                H2O.in = mean(H2O, na.rm = TRUE),
+                .groups = "drop")
+
+CRDS.out <- CRDS.out %>%
+        mutate(hour = floor_date(DATE.TIME, unit = "hour")) %>%
+        group_by(hour) %>%
+        summarise(
+                CO2.out = mean(CO2, na.rm = TRUE),
+                CH4.out = mean(CH4, na.rm = TRUE),
+                NH3.out = mean(NH3, na.rm = TRUE),
+                H2O.out = mean(H2O, na.rm = TRUE),
+                .groups = "drop")
+
+######## Data combining ##########
+# Format Date and time
+CRDS.in$hour = as.POSIXct(CRDS.in$hour, format = "%Y-%m-%d %H:%M:%S")
+CRDS.out$hour = as.POSIXct(CRDS.out$hour, format = "%Y-%m-%d %H:%M:%S")
+
+# convert into data.table
+data.table::setDT(CRDS.in)
+data.table::setDT(CRDS.out)
+
+# combine FTIR and CRDS
+GAS.comb <- CRDS.in[CRDS.out, on = .(hour), roll = "nearest"]
+
+# write
+write.csv(GAS.comb, "2024_Aug_Sep_GAS.in_out.csv", row.names = FALSE)
 
