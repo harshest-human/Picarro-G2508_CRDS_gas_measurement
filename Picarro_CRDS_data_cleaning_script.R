@@ -64,7 +64,7 @@ piclean <- function(input_path, output_path, result_file_name) {
         cat("Non-integer MPVPosition values removed =", non_integer_mpv, "/", total_mpv, "(", round(non_integer_percentage, 2), "%)", "\n")
         
         # Filter out rows with non-integer MPVPosition values
-        merged_data <- merged_data %>% filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0)
+        merged_data <- merged_data %>% filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0)
         
         # Temporally average each MPVPosition over 4-minute intervals, taking last 180 seconds if available
         cat("Averaging data at each MPVPosition interval...\n")
