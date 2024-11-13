@@ -1,5 +1,5 @@
-####### Development of picarro clean function ########
 piclean <- function(input_path, output_path, result_file_name) {
+        
         library(dplyr)
         library(lubridate)
         
@@ -8,6 +8,7 @@ piclean <- function(input_path, output_path, result_file_name) {
         
         # Function to append and process data files
         appendData <- function() {
+                
                 dat_files <- list.files(path = input_path, recursive = TRUE, pattern = "\\.dat$", full.names = TRUE)
                 total_files <- length(dat_files)
                 
@@ -52,19 +53,17 @@ piclean <- function(input_path, output_path, result_file_name) {
                 mutate(DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S")) %>%
                 select(-DATE, -TIME)
         
-        # Check for and remove non-integer MPVPosition values
-        cat("Removing non-integer MPVPosition values...\n")
-        
-        # Identify non-integer values
-        non_integer_mpv <- sum(!is.na(merged_data$MPVPosition) & merged_data$MPVPosition %% 1 != 0)
+        # Check for and remove non-integer and zero MPVPosition values
+        cat("Removing non-integer and zero MPVPosition values...\n")
+        non_integer_mpv <- sum(!is.na(merged_data$MPVPosition) & (merged_data$MPVPosition %% 1 != 0 | merged_data$MPVPosition == 0))
         total_mpv <- nrow(merged_data)
         non_integer_percentage <- (non_integer_mpv / total_mpv) * 100
         
-        # Log the count and percentage of non-integer values
-        cat("Non-integer MPVPosition values removed =", non_integer_mpv, "/", total_mpv, "(", round(non_integer_percentage, 2), "%)", "\n")
+        cat("Non-integer and zero MPVPosition values removed =", non_integer_mpv, "/", total_mpv, "(", round(non_integer_percentage, 2), "%)\n")
         
-        # Filter out rows with non-integer MPVPosition values
-        merged_data <- merged_data %>% filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0)
+        # Filter out rows with non-integer MPVPosition values or zeros
+        merged_data <- merged_data %>%
+                filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0)
         
         # Temporally average each MPVPosition over 4-minute intervals, taking last 180 seconds if available
         cat("Averaging data at each MPVPosition interval...\n")
@@ -84,7 +83,7 @@ piclean <- function(input_path, output_path, result_file_name) {
                         CH4 = mean(CH4, na.rm = TRUE),
                         H2O = mean(H2O, na.rm = TRUE),
                         NH3 = mean(NH3, na.rm = TRUE) / 1000,  # Divide NH3 by 1000
-                        OutletValve = last(OutletValve) # Take the last status of OutletValve
+                        OutletValve = last(OutletValve)  # Take the last status of OutletValve
                 ) %>%
                 select(DATE.TIME, everything()) %>%
                 select(-Interval) %>%
@@ -104,6 +103,7 @@ piclean <- function(input_path, output_path, result_file_name) {
         # Optionally, return the processed dataframe
         return(processed_data)
 }
+
 
 
 #### Example usage
