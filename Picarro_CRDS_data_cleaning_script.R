@@ -74,7 +74,7 @@ piclean <- function(input_path, output_path, result_file_name) {
                         Interval = cumsum(c(0, diff(DATE.TIME) > 240))  # Track intervals based on gaps longer than 4 minutes
                 ) %>%
                 group_by(MPVPosition, Interval) %>%
-                filter(n() >= 180) %>%  # Allow intervals with at least 180 observations
+                filter(n() >= 200) %>%  # Ensure at least 200 observations to continue processing
                 slice_tail(n = 180) %>%  # Take the last 180 seconds for averaging
                 summarise(
                         DATE.TIME = last(DATE.TIME),  # Use the last timestamp in the interval
@@ -103,7 +103,6 @@ piclean <- function(input_path, output_path, result_file_name) {
         # Optionally, return the processed dataframe
         return(processed_data)
 }
-
 
 
 #### Example usage
