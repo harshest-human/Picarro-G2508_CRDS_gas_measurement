@@ -52,8 +52,7 @@ piconcatenate <- function(input_path, output_path, result_file_name, selected_co
 
 
 
-
-################# Development of piconcatenate function #########################
+################# Development of piclean function #########################
 
 piclean <- function(input_path, output_path, result_file_name) {
         
