@@ -1,5 +1,5 @@
 
-################# Development of piconcatenate function #########################
+################# Development of piconcatenate function #######################
 
 piconcatenate <- function(input_path, output_path, result_file_name, selected_columns) {
         
