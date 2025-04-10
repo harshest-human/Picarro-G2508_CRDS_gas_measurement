@@ -76,5 +76,5 @@ reshaped_CRDS.P8 <- reshaped_CRDS.P8 %>%
                 H2O_S = H2O_avg_MPV3
         )
 
-write.csv(reshaped_CRDS.P8,"20250408-09_hourly_CRDS.P8" , row.names = FALSE, quote = FALSE)
+write.csv(reshaped_CRDS.P8,"20250408-09_hourly_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
 
