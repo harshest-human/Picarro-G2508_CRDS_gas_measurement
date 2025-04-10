@@ -177,15 +177,15 @@ piclean <- function(input_path, output_path, result_file_name, gas, start_time, 
 
 
 #### Example usage
-input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/04"
-output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-result_file_name <- "20250408_Ring_concatenated"
-gas <- c("CO2", "CH4", "NH3", "H2O")
-start_time = "2025-04-08 12:00:00"
-end_time = "2025-04-10 12:00:00"
-flush = 180  # Flush time in seconds
-interval = 450  # Interval for aggregation in seconds (can be changed to any value)
+#input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/04"
+#output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
+#result_file_name <- "20250408_Ring_concatenated"
+#gas <- c("CO2", "CH4", "NH3", "H2O")
+#start_time = "2025-04-08 12:00:00"
+#end_time = "2025-04-10 12:00:00"
+#flush = 180  # Flush time in seconds
+#interval = 450  # Interval for aggregation in seconds (can be changed to any value)
 
-CRDS.P8 <- piclean(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval)
+#CRDS.P8 <- piclean(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval)
 
 
