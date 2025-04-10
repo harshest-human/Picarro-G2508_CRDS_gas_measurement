@@ -14,56 +14,16 @@ source("Picarro_CRDS_data_cleaning_script.R")
 
 ####### Data importing and cleaning ########
 #Picarro G2508 
-piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2024", output_path = "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean", result_file_name = "2024_Nov_16_to_30_CRDS.P8")  
-CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024_Nov_16_to_30_CRDS.P8.dat")
-CRDS.P8 <- CRDS.P8 %>% rename_with(~paste0(., ".P8"), -DATE.TIME) # Add Suffix
+input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/04"
+output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
+result_file_name <- "20250408_Ring_concatenated"
+gas <- c("CO2", "CH4", "NH3", "H2O")
+start_time = "2025-04-08 12:00:00"
+end_time = "2025-04-10 12:00:00"
+flush = 180  # Flush time in seconds
+interval = 450  # Interval for aggregation in seconds (can be changed to any value)
 
-#Picarro G2509 
-piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509/2024", output_path = "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean", result_file_name = "2024_Nov_16_to_30_CRDS.P9")  
-CRDS.P9 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024_Nov_16_to_30_CRDS.P9.dat")
-CRDS.P9 <- CRDS.P9 %>% rename_with(~paste0(., ".P9"), -DATE.TIME) # Add Suffix
+CRDS.P8 <- piclean(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval)
 
-
-####### Data combining ########
-# Convert CRDS.P8 and CRDS.P9 to data.table format
-data.table::setDT(CRDS.P8)
-data.table::setDT(CRDS.P9)
-
-# Convert DATE.TIME columns to POSIXct format
-CRDS.P8[, DATE.TIME := as.POSIXct(DATE.TIME, format = "%Y-%m-%d %H:%M:%S")]
-CRDS.P9[, DATE.TIME := as.POSIXct(DATE.TIME, format = "%Y-%m-%d %H:%M:%S")]
-
-# Define the start and end dates for the time sequence
-start_date <- as.POSIXct("2024-11-16 00:00:00")
-end_date <- as.POSIXct("2024-11-26 00:00:00")
-
-CRDS.P9 <- CRDS.P9[DATE.TIME >= start_date & DATE.TIME <= end_date]
-CRDS.P8 <- CRDS.P8[DATE.TIME >= start_date & DATE.TIME <= end_date]
-
-# Set up a sequence of 4-minute intervals from min to max DATE.TIME
-time_seq1 <- data.table(DATE.TIME = seq(min(CRDS.P9$DATE.TIME), max(CRDS.P9$DATE.TIME), by = "4 min"))
-time_seq2 <- data.table(DATE.TIME = seq(min(CRDS.P8$DATE.TIME), max(CRDS.P8$DATE.TIME), by = "4 min"))
-
-# Merge data with the full time sequence to fill gaps
-complete_data <- merge(full_time_seq, data, by = "DATE.TIME", all.x = TRUE)
-
-# Merge using nearest timestamp
-CRDS.comb <- CRDS.P8[CRDS.P9, on = "DATE.TIME", roll = "nearest"] 
-
-
-# write
-write.csv(CRDS.comb, "2024_Nov_16_to_30_CRDS.comb.csv", row.names = FALSE) 
-
-
-# Summary Statistics
-# Count observations for each unique position in MPVPosition.P8
-count_p8 <- CRDS.comb %>%
-        group_by(MPVPosition.P8) %>%
-        summarise(count = n())
-
-# Count observations for each unique position in MPVPosition.P9
-count_p9 <- CRDS.comb %>%
-        group_by(MPVPosition.P9) %>%
-        summarise(count = n())
 
 
