@@ -21,7 +21,7 @@ gas <- c("CO2", "CH4", "NH3", "H2O")
 start_time = "2025-04-08 12:00:00"
 end_time = "2025-04-10 12:00:00"
 flush = 180  # Flush time in seconds
-interval = 450  # Interval for aggregation in seconds (can be changed to any value)
+interval = 450  # Total time at MPVPosition in seconds
 
 CRDS.P8 <- piclean(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval)
 
