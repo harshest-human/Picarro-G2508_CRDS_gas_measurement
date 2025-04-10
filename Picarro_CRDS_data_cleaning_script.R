@@ -160,11 +160,11 @@ piclean <- function(input_path, output_path, result_file_name, gas, start_time, 
         cat("Number of representative observations for each MPVPosition level:\n")
         print(table(summarized$MPVPosition))
         
-        full_output_path <- file.path(output_path, paste0(result_file_name, ".dat"))
+        full_output_path <- file.path(output_path, paste0(result_file_name, ".csv"))
         cat("Exporting final data to file...\n")
-        write.table(summarized, full_output_path, row.names = FALSE, sep = "\t", quote = FALSE)
+        write.csv(summarized, full_output_path, row.names = FALSE, quote = FALSE)
         
-        cat("✔ Data successfully processed and saved as .dat file\n")
+        cat("✔ Data successfully processed and saved as .csv file\n")
         cat("✔ Dataframe contains", ncol(summarized), "variables:\n", colnames(summarized), "\n")
         
         return(summarized)

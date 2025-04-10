@@ -15,20 +15,22 @@ source("Picarro_CRDS_data_cleaning_script.R")
 
 ####### Data importing and cleaning ########
 #Picarro G2508 
-input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508"
+input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/04"
 output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-result_file_name <- "2024-08-27_2024-09-18_Picarro08"
-CRDS.P8 <- piconcatenate(input_path, output_path, result_file_name)
-CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/2024-08-27_2024-09-18_Picarro08.csv")
-
+result_file_name <- "20250408_Ring_concatenated"
+selected_columns <- c("DATE", "TIME", "MPVPosition", "CO2", "CH4", "NH3", "H2O")
+CRDS.P8 <- piconcatenate(input_path, output_path, result_file_name, selected_columns)
+CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408_Ring_concatenated.csv")
 CRDS.P8 <- CRDS.P8 %>% mutate(DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S"))
+CRDS.P8 <- CRDS.P8 %>% filter(DATE.TIME >= as.POSIXct("2025-04-08 12:00:01"), DATE.TIME <= as.POSIXct("2025-04-09 12:00:00"))
+
 
 CRDS.P8 <- CRDS.P8 %>%
-        mutate(DATE.TIME = floor_date(DATE.TIME, unit = "2 minutes"))%>%
+        mutate(DATE.TIME = floor_date(DATE.TIME, unit = "1 minute"))%>%
         group_by(DATE.TIME) %>%
         summarise(
                 MPVPosition = mean(MPVPosition, na.rm = TRUE),
-                N2O = mean(N2O, na.rm = TRUE),
+                #N2O = mean(N2O, na.rm = TRUE),
                 CO2 = mean(CO2, na.rm = TRUE),
                 CH4 = mean(CH4, na.rm = TRUE),
                 H2O = mean(H2O, na.rm = TRUE),

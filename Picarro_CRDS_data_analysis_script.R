@@ -13,17 +13,25 @@ library(data.table)
 source("Picarro_CRDS_data_cleaning_script.R")
 
 ####### Data importing and cleaning ########
-#Picarro G2508 
-input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/04"
-output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-result_file_name <- "20250408_Ring_concatenated"
-gas <- c("CO2", "CH4", "NH3", "H2O")
-start_time = "2025-04-08 12:00:00"
-end_time = "2025-04-10 12:00:00"
-flush = 180  # Flush time in seconds
-interval = 450  # Total time at MPVPosition in seconds
+#Picarro G2508 (2025-04-08)
+CRDS.P8 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/04",
+                   
+                   output_path = "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean",
+                   
+                   result_file_name = "20250408-09_Ring_7.5_cycle_CRDS",
+                   
+                   gas = c("CO2", "CH4", "NH3", "H2O"),
+                   
+                   start_time = "2025-04-08 12:00:00",
+                   
+                   end_time = "2025-04-09 23:59:59",
+                   
+                   flush = 180, # Flush time in seconds
+                   
+                   interval = 450) # Total time at MPVPosition in seconds
 
-CRDS.P8 <- piclean(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval)
 
+#read final result
+CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-09_Ring_7.5_cycle_CRDS.csv")
 
 
