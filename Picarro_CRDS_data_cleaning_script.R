@@ -53,6 +53,8 @@ piconcatenate <- function(input_path, output_path, result_file_name, selected_co
 
 
 ################# Development of piclean function #########################
+################# Development of piclean function #########################
+################# Development of piclean function #########################
 piclean <- function(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval) {
         library(dplyr)
         library(lubridate)
@@ -119,6 +121,12 @@ piclean <- function(input_path, output_path, result_file_name, gas, start_time, 
         merged_data <- merged_data %>%
                 mutate(step_id = cumsum(c(1, diff(MPVPosition) != 0)))
         
+        # Set the timestamp before applying flush time logic
+        merged_data <- merged_data %>%
+                group_by(step_id, MPVPosition) %>%
+                arrange(DATE.TIME) %>%
+                mutate(timestamp_for_step = last(DATE.TIME))  # Set the timestamp as the last observation in each step
+        
         # Apply the flush time logic: replace gas values with NA during the flush time
         merged_data <- merged_data %>%
                 group_by(step_id, MPVPosition) %>%
@@ -134,7 +142,7 @@ piclean <- function(input_path, output_path, result_file_name, gas, start_time, 
                 mutate(time_rank = row_number()) %>%
                 filter(time_rank <= interval) %>%
                 summarise(
-                        DATE.TIME = min(DATE.TIME) + flush,
+                        DATE.TIME = last(timestamp_for_step),  # Carry the timestamp from the last observation
                         across(all_of(gas), ~ mean(.x, na.rm = TRUE)),
                         .groups = "drop"
                 )
@@ -143,19 +151,6 @@ piclean <- function(input_path, output_path, result_file_name, gas, start_time, 
         summarized <- summarized %>%
                 select(-step_id) %>%
                 select(DATE.TIME, MPVPosition, everything())  # Ensure correct column order
-        
-        # Adjust DATE.TIME to match the start_time (reducing the initial time gap)
-        if (!is.null(start_time)) {
-                cat("Adjusting DATE.TIME to match start_time...\n")
-                
-                start_time <- as.POSIXct(start_time)
-                first_time <- min(summarized$DATE.TIME, na.rm = TRUE)
-                
-                time_diff <- difftime(first_time, start_time, units = "secs")
-                
-                summarized <- summarized %>%
-                        mutate(DATE.TIME = DATE.TIME - time_diff)
-        }
         
         if ("NH3" %in% colnames(summarized)) {
                 summarized <- summarized %>%
@@ -176,16 +171,17 @@ piclean <- function(input_path, output_path, result_file_name, gas, start_time, 
 }
 
 
+
+
 #### Example usage
 #input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/04"
 #output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
 #result_file_name <- "20250408_Ring_concatenated"
 #gas <- c("CO2", "CH4", "NH3", "H2O")
 #start_time = "2025-04-08 12:00:00"
-#end_time = "2025-04-10 12:00:00"
+#end_time = "2025-04-08 22:07:30"
 #flush = 180  # Flush time in seconds
 #interval = 450  # Interval for aggregation in seconds (can be changed to any value)
 
-#CRDS.P8 <- piclean(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval)
-
+#CRDS_data <- piclean(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval)
 
