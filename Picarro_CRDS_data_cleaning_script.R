@@ -51,9 +51,6 @@ piconcatenate <- function(input_path, output_path, result_file_name, selected_co
 }
 
 
-
-################# Development of piclean function #########################
-################# Development of piclean function #########################
 ################# Development of piclean function #########################
 piclean <- function(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval) {
         library(dplyr)
