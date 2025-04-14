@@ -18,13 +18,13 @@ CRDS.P8 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Pic
                    
                    output_path = "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean",
                    
-                   result_file_name = "20250408-09_Ring_7.5_cycle_CRDS",
+                   result_file_name = "20250408-13_Ring_7.5_cycle_CRDS",
                    
                    gas = c("CO2", "CH4", "NH3", "H2O"),
                    
                    start_time = "2025-04-08 12:00:00",
                    
-                   end_time = "2025-04-09 23:59:59",
+                   end_time = "2025-04-13 23:59:59",
                    
                    flush = 180, # Flush time in seconds
                    
@@ -32,7 +32,7 @@ CRDS.P8 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Pic
 
 
 # Read in the data
-CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-09_Ring_7.5_cycle_CRDS.csv")
+CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-13_Ring_7.5_cycle_CRDS.csv")
 
 # Convert DATE.TIME to datetime format
 CRDS.P8$DATE.TIME <- ymd_hms(CRDS.P8$DATE.TIME)
@@ -76,5 +76,18 @@ reshaped_CRDS.P8 <- reshaped_CRDS.P8 %>%
                 H2O_S = H2O_avg_MPV3
         )
 
-write.csv(reshaped_CRDS.P8,"20250408-09_hourly_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
+# Convert hour to datetime format
+reshaped_CRDS.P8$hour <- ymd_hms(reshaped_CRDS.P8$hour)
+
+# Write csv day wise
+reshaped_CRDS_08_09 <- reshaped_CRDS.P8 %>% filter(hour >= ymd_hms("2025-04-08 12:00:00"), hour <= ymd_hms("2025-04-09 23:00:00"))
+write.csv(reshaped_CRDS_08_09,"20250408-09_hourly_CRDS08.csv" , row.names = FALSE, quote = FALSE)
+
+
+reshaped_CRDS_10_11 <- reshaped_CRDS.P8 %>% filter(hour >= ymd_hms("2025-04-10 00:00:00"), hour <= ymd_hms("2025-04-11 23:00:00"))
+write.csv(reshaped_CRDS_10_11,"20250410-11_hourly_CRDS08.csv" , row.names = FALSE, quote = FALSE)
+
+
+reshaped_CRDS_12_13 <- reshaped_CRDS.P8 %>% filter(hour >= ymd_hms("2025-04-12 00:00:00"), hour <= ymd_hms("2025-04-13 23:00:00"))
+write.csv(reshaped_CRDS_12_13,"20250412-13_hourly_CRDS08.csv" , row.names = FALSE, quote = FALSE)
 
