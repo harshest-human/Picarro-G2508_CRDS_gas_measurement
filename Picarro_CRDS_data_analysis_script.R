@@ -18,13 +18,13 @@ CRDS.P8 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Pic
                    
                    output_path = "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean",
                    
-                   result_file_name = "20250408-13_Ring_7.5_cycle_CRDS",
+                   result_file_name = "20250408-15_Ring_7.5_cycle_CRDS",
                    
                    gas = c("CO2", "CH4", "NH3", "H2O"),
                    
                    start_time = "2025-04-08 12:00:00",
                    
-                   end_time = "2025-04-13 23:59:59",
+                   end_time = "2025-04-15 23:59:59",
                    
                    flush = 180, # Flush time in seconds
                    
@@ -32,7 +32,7 @@ CRDS.P8 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Pic
 
 
 # Read in the data
-CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-13_Ring_7.5_cycle_CRDS.csv")
+CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15_Ring_7.5_cycle_CRDS.csv")
 
 # Convert DATE.TIME to datetime format
 CRDS.P8$DATE.TIME <- ymd_hms(CRDS.P8$DATE.TIME)
@@ -90,4 +90,9 @@ write.csv(reshaped_CRDS_10_11,"20250410-11_hourly_CRDS08.csv" , row.names = FALS
 
 reshaped_CRDS_12_13 <- reshaped_CRDS.P8 %>% filter(hour >= ymd_hms("2025-04-12 00:00:00"), hour <= ymd_hms("2025-04-13 23:00:00"))
 write.csv(reshaped_CRDS_12_13,"20250412-13_hourly_CRDS08.csv" , row.names = FALSE, quote = FALSE)
+
+
+reshaped_CRDS_14_15 <- reshaped_CRDS.P8 %>% filter(hour >= ymd_hms("2025-04-14 00:00:00"), hour <= ymd_hms("2025-04-15 23:00:00"))
+write.csv(reshaped_CRDS_14_15,"20250414-15_hourly_CRDS08.csv" , row.names = FALSE, quote = FALSE)
+
 
