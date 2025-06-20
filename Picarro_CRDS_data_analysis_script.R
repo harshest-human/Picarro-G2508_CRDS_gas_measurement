@@ -52,27 +52,28 @@ ATB_avg <- ATB_CRDS.P8 %>%
         )
 
 ATB_avg <- ATB_avg %>%
+        filter(MPVPosition %in% c(1, 2, 3)) %>%
         mutate(
-                location = recode(as.factor(location),
+                location = recode(as.factor(MPVPosition),
                                   `1` = "N",
                                   `2` = "in",
                                   `3` = "S"),
-                lab = "ATB",
-                analyzer = "CRDS.P8"
+                lab = factor("UB"),
+                analyzer = factor("CRDS.P8")
         )
 
 # Write csv
+ATB_avg <- ATB_avg %>% select(DATE.TIME, MPVPosition, location, lab, analyzer, everything())
 write.csv(ATB_avg,"20250408-15_hourly_ATB_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
-
 
 # Reshape to wide format, each gas and MPVPosition combination becomes a column
 ATB_long <- ATB_avg %>%
+        select(-MPVPosition) %>%
         pivot_wider(
                 names_from = c(location,lab),
                 values_from = c(CO2, CH4, NH3, H2O),
                 names_glue = "{.value}_{location}_{lab}"
         )
-
 
 # Convert DATE.TIME to datetime format
 ATB_long$DATE.TIME <- ymd_hms(ATB_long$DATE.TIME)
@@ -100,6 +101,7 @@ UB_CRDS.P8 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringversu
                       interval = 450) # Total time at MPVPosition in seconds
 
 
+
 # Read in the data
 UB_CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15_Ring_7.5_cycle_UB_CRDS.P8.csv")
 
@@ -107,11 +109,11 @@ UB_CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15
 UB_CRDS.P8$DATE.TIME <- ymd_hms(UB_CRDS.P8$DATE.TIME)
 
 # Create an hourly timestamp to group by
-UB_CRDS.P8$hour <- floor_date(UB_CRDS.P8$DATE.TIME, "hour")
+UB_CRDS.P8$DATE.TIME <- floor_date(UB_CRDS.P8$DATE.TIME, "hour")
 
 # Calculate the hourly average for each gas by MPVPosition
-UB_averages <- UB_CRDS.P8 %>%
-        group_by(hour, MPVPosition) %>%
+UB_avg <- UB_CRDS.P8 %>%
+        group_by(DATE.TIME, MPVPosition) %>%
         summarise(
                 CO2 = mean(CO2, na.rm = TRUE),
                 CH4 = mean(CH4, na.rm = TRUE),
@@ -120,38 +122,37 @@ UB_averages <- UB_CRDS.P8 %>%
                 .groups = "drop"  # To avoid warning about grouping
         )
 
+UB_avg <- UB_avg %>%
+        filter(MPVPosition %in% c(1, 8, 9)) %>%
+        mutate(
+                location = recode(as.factor(MPVPosition),
+                                  `8` = "N",
+                                  `1` = "in",
+                                  `9` = "S"),
+                lab = factor("UB"),
+                analyzer = factor("CRDS.P8")
+        )
+
+# Write csv
+UB_avg <- UB_avg %>% select(DATE.TIME, MPVPosition, location, lab, analyzer, everything())
+write.csv(UB_avg,"20250408-15_hourly_UB_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
+
+
 # Reshape to wide format, each gas and MPVPosition combination becomes a column
-reshaped_UB_CRDS.P8 <- UB_averages %>%
-        filter(MPVPosition %in% c(1,8,9)) %>%
+UB_long <- UB_avg %>%
+        select(-MPVPosition) %>%
         pivot_wider(
-                names_from = MPVPosition,
+                names_from = c(location,lab),
                 values_from = c(CO2, CH4, NH3, H2O),
-                names_glue = "{.value}_MPV{MPVPosition}"
+                names_glue = "{.value}_{location}_{lab}"
         )
 
-# Rename columns as needed
-reshaped_UB_CRDS.P8 <- reshaped_UB_CRDS.P8 %>%
-        rename(
-                UB_CO2_in = CO2_MPV1,
-                UB_CO2_N = CO2_MPV8,
-                UB_CO2_S = CO2_MPV9,
-                UB_CH4_in = CH4_MPV1,
-                UB_CH4_N = CH4_MPV8,
-                UB_CH4_S = CH4_MPV9,
-                UB_NH3_in = NH3_MPV1,
-                UB_NH3_N = NH3_MPV8,
-                UB_NH3_S = NH3_MPV9,
-                UB_H2O_in = H2O_MPV1,
-                UB_H2O_N = H2O_MPV8,
-                UB_H2O_S = H2O_MPV9
-        )
 
-# Convert hour to datetime format
-reshaped_UB_CRDS.P8$hour <- ymd_hms(reshaped_UB_CRDS.P8$hour)
+# Convert DATE.TIME to datetime format
+UB_long$DATE.TIME <- ymd_hms(UB_long$DATE.TIME)
 
 # Write csv day wise
-reshaped_UB_CRDS.P8 <- reshaped_UB_CRDS.P8 %>% filter(hour >= ymd_hms("2025-04-08 12:00:00"), hour <= ymd_hms("2025-04-15 12:59:59"))
-write.csv(reshaped_UB_CRDS.P8,"20250408-15_hourly_UB_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
+write.csv(UB_long,"20250408-15_long_UB_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
 
 
 
