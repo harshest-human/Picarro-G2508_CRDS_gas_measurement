@@ -58,7 +58,7 @@ ATB_avg <- ATB_avg %>%
                                   `1` = "N",
                                   `2` = "in",
                                   `3` = "S"),
-                lab = factor("UB"),
+                lab = factor("ATB"),
                 analyzer = factor("CRDS.P8")
         )
 
@@ -202,7 +202,7 @@ LUFA_avg <- LUFA_avg %>%
                                   `1` = "in",
                                   `2` = "S",
                                   `3` = "N"),
-                lab = factor("UB"),
+                lab = factor("LUFA"),
                 analyzer = factor("CRDS.P8")
         )
 
