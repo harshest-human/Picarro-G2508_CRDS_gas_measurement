@@ -44,10 +44,10 @@ ATB_CRDS.P8$hour <- floor_date(ATB_CRDS.P8$DATE.TIME, "hour")
 ATB_averages <- ATB_CRDS.P8 %>%
         group_by(hour, MPVPosition) %>%
         summarise(
-                CO2_avg = mean(CO2, na.rm = TRUE),
-                CH4_avg = mean(CH4, na.rm = TRUE),
-                NH3_avg = mean(NH3, na.rm = TRUE),
-                H2O_avg = mean(H2O, na.rm = TRUE),
+                CO2 = mean(CO2, na.rm = TRUE),
+                CH4 = mean(CH4, na.rm = TRUE),
+                NH3 = mean(NH3, na.rm = TRUE),
+                H2O = mean(H2O, na.rm = TRUE),
                 .groups = "drop"  # To avoid warning about grouping
         )
 
@@ -56,25 +56,25 @@ reshaped_ATB_CRDS.P8 <- ATB_averages %>%
         filter(MPVPosition %in% c(1,2,3)) %>%
         pivot_wider(
                 names_from = MPVPosition,
-                values_from = c(CO2_avg, CH4_avg, NH3_avg, H2O_avg),
+                values_from = c(CO2, CH4, NH3, H2O),
                 names_glue = "{.value}_MPV{MPVPosition}"
         )
 
 # Rename columns as needed
 reshaped_ATB_CRDS.P8 <- reshaped_ATB_CRDS.P8 %>%
         rename(
-                ATB_CO2_in = CO2_avg_MPV2,
-                ATB_CO2_N = CO2_avg_MPV1,
-                ATB_CO2_S = CO2_avg_MPV3,
-                ATB_CH4_in = CH4_avg_MPV2,
-                ATB_CH4_N = CH4_avg_MPV1,
-                ATB_CH4_S = CH4_avg_MPV3,
-                ATB_NH3_in = NH3_avg_MPV2,
-                ATB_NH3_N = NH3_avg_MPV1,
-                ATB_NH3_S = NH3_avg_MPV3,
-                ATB_H2O_in = H2O_avg_MPV2,
-                ATB_H2O_N = H2O_avg_MPV1,
-                ATB_H2O_S = H2O_avg_MPV3
+                ATB_CO2_in = CO2_MPV2,
+                ATB_CO2_N = CO2_MPV1,
+                ATB_CO2_S = CO2_MPV3,
+                ATB_CH4_in = CH4_MPV2,
+                ATB_CH4_N = CH4_MPV1,
+                ATB_CH4_S = CH4_MPV3,
+                ATB_NH3_in = NH3_MPV2,
+                ATB_NH3_N = NH3_MPV1,
+                ATB_NH3_S = NH3_MPV3,
+                ATB_H2O_in = H2O_MPV2,
+                ATB_H2O_N = H2O_MPV1,
+                ATB_H2O_S = H2O_MPV3
         )
 
 # Convert hour to datetime format
@@ -117,10 +117,10 @@ UB_CRDS.P8$hour <- floor_date(UB_CRDS.P8$DATE.TIME, "hour")
 UB_averages <- UB_CRDS.P8 %>%
         group_by(hour, MPVPosition) %>%
         summarise(
-                CO2_avg = mean(CO2, na.rm = TRUE),
-                CH4_avg = mean(CH4, na.rm = TRUE),
-                NH3_avg = mean(NH3, na.rm = TRUE),
-                H2O_avg = mean(H2O, na.rm = TRUE),
+                CO2 = mean(CO2, na.rm = TRUE),
+                CH4 = mean(CH4, na.rm = TRUE),
+                NH3 = mean(NH3, na.rm = TRUE),
+                H2O = mean(H2O, na.rm = TRUE),
                 .groups = "drop"  # To avoid warning about grouping
         )
 
@@ -129,25 +129,25 @@ reshaped_UB_CRDS.P8 <- UB_averages %>%
         filter(MPVPosition %in% c(1,8,9)) %>%
         pivot_wider(
                 names_from = MPVPosition,
-                values_from = c(CO2_avg, CH4_avg, NH3_avg, H2O_avg),
+                values_from = c(CO2, CH4, NH3, H2O),
                 names_glue = "{.value}_MPV{MPVPosition}"
         )
 
 # Rename columns as needed
 reshaped_UB_CRDS.P8 <- reshaped_UB_CRDS.P8 %>%
         rename(
-                UB_CO2_in = CO2_avg_MPV1,
-                UB_CO2_N = CO2_avg_MPV8,
-                UB_CO2_S = CO2_avg_MPV9,
-                UB_CH4_in = CH4_avg_MPV1,
-                UB_CH4_N = CH4_avg_MPV8,
-                UB_CH4_S = CH4_avg_MPV9,
-                UB_NH3_in = NH3_avg_MPV1,
-                UB_NH3_N = NH3_avg_MPV8,
-                UB_NH3_S = NH3_avg_MPV9,
-                UB_H2O_in = H2O_avg_MPV1,
-                UB_H2O_N = H2O_avg_MPV8,
-                UB_H2O_S = H2O_avg_MPV9
+                UB_CO2_in = CO2_MPV1,
+                UB_CO2_N = CO2_MPV8,
+                UB_CO2_S = CO2_MPV9,
+                UB_CH4_in = CH4_MPV1,
+                UB_CH4_N = CH4_MPV8,
+                UB_CH4_S = CH4_MPV9,
+                UB_NH3_in = NH3_MPV1,
+                UB_NH3_N = NH3_MPV8,
+                UB_NH3_S = NH3_MPV9,
+                UB_H2O_in = H2O_MPV1,
+                UB_H2O_N = H2O_MPV8,
+                UB_H2O_S = H2O_MPV9
         )
 
 # Convert hour to datetime format
@@ -191,10 +191,10 @@ LUFA_CRDS.P8$hour <- floor_date(LUFA_CRDS.P8$DATE.TIME, "hour")
 LUFA_averages <- LUFA_CRDS.P8 %>%
         group_by(hour, MPVPosition) %>%
         summarise(
-                CO2_avg = mean(CO2, na.rm = TRUE),
-                CH4_avg = mean(CH4, na.rm = TRUE),
-                NH3_avg = mean(NH3, na.rm = TRUE),
-                H2O_avg = mean(H2O, na.rm = TRUE),
+                CO2 = mean(CO2, na.rm = TRUE),
+                CH4 = mean(CH4, na.rm = TRUE),
+                NH3 = mean(NH3, na.rm = TRUE),
+                H2O = mean(H2O, na.rm = TRUE),
                 .groups = "drop"  # To avoid warning about grouping
         )
 
@@ -203,25 +203,25 @@ reshaped_LUFA_CRDS.P8 <- LUFA_averages %>%
         filter(MPVPosition %in% c(1,3,2)) %>%
         pivot_wider(
                 names_from = MPVPosition,
-                values_from = c(CO2_avg, CH4_avg, NH3_avg, H2O_avg),
+                values_from = c(CO2, CH4, NH3, H2O),
                 names_glue = "{.value}_MPV{MPVPosition}"
         )
 
 # Rename columns as needed
 reshaped_LUFA_CRDS.P8 <- reshaped_LUFA_CRDS.P8 %>%
         rename(
-                LUFA_CO2_in = CO2_avg_MPV1,
-                LUFA_CO2_N = CO2_avg_MPV3,
-                LUFA_CO2_S = CO2_avg_MPV2,
-                LUFA_CH4_in = CH4_avg_MPV1,
-                LUFA_CH4_N = CH4_avg_MPV3,
-                LUFA_CH4_S = CH4_avg_MPV2,
-                LUFA_NH3_in = NH3_avg_MPV1,
-                LUFA_NH3_N = NH3_avg_MPV3,
-                LUFA_NH3_S = NH3_avg_MPV2,
-                LUFA_H2O_in = H2O_avg_MPV1,
-                LUFA_H2O_N = H2O_avg_MPV3,
-                LUFA_H2O_S = H2O_avg_MPV2
+                LUFA_CO2_in = CO2_MPV1,
+                LUFA_CO2_N = CO2_MPV3,
+                LUFA_CO2_S = CO2_MPV2,
+                LUFA_CH4_in = CH4_MPV1,
+                LUFA_CH4_N = CH4_MPV3,
+                LUFA_CH4_S = CH4_MPV2,
+                LUFA_NH3_in = NH3_MPV1,
+                LUFA_NH3_N = NH3_MPV3,
+                LUFA_NH3_S = NH3_MPV2,
+                LUFA_H2O_in = H2O_MPV1,
+                LUFA_H2O_N = H2O_MPV3,
+                LUFA_H2O_S = H2O_MPV2
         )
 
 # Convert hour to datetime format
