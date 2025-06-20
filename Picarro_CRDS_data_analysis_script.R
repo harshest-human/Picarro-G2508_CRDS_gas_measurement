@@ -182,11 +182,11 @@ LUFA_CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-
 LUFA_CRDS.P8$DATE.TIME <- ymd_hms(LUFA_CRDS.P8$DATE.TIME)
 
 # Create an hourly timestamp to group by
-LUFA_CRDS.P8$hour <- floor_date(LUFA_CRDS.P8$DATE.TIME, "hour")
+LUFA_CRDS.P8$DATE.TIME <- floor_date(LUFA_CRDS.P8$DATE.TIME, "hour")
 
 # Calculate the hourly average for each gas by MPVPosition
-LUFA_averages <- LUFA_CRDS.P8 %>%
-        group_by(hour, MPVPosition) %>%
+LUFA_avg <- LUFA_CRDS.P8 %>%
+        group_by(DATE.TIME, MPVPosition) %>%
         summarise(
                 CO2 = mean(CO2, na.rm = TRUE),
                 CH4 = mean(CH4, na.rm = TRUE),
@@ -195,35 +195,32 @@ LUFA_averages <- LUFA_CRDS.P8 %>%
                 .groups = "drop"  # To avoid warning about grouping
         )
 
+LUFA_avg <- LUFA_avg %>%
+        filter(MPVPosition %in% c(1, 2, 3)) %>%
+        mutate(
+                location = recode(as.factor(MPVPosition),
+                                  `1` = "in",
+                                  `2` = "S",
+                                  `3` = "N"),
+                lab = factor("UB"),
+                analyzer = factor("CRDS.P8")
+        )
+
+# Write csv
+LUFA_avg <- LUFA_avg %>% select(DATE.TIME, MPVPosition, location, lab, analyzer, everything())
+write.csv(LUFA_avg,"20250408-15_hourly_LUFA_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
+
 # Reshape to wide format, each gas and MPVPosition combination becomes a column
-reshaped_LUFA_CRDS.P8 <- LUFA_averages %>%
-        filter(MPVPosition %in% c(1,3,2)) %>%
+LUFA_long <- LUFA_avg %>%
+        select(-MPVPosition) %>%
         pivot_wider(
-                names_from = MPVPosition,
+                names_from = c(location,lab),
                 values_from = c(CO2, CH4, NH3, H2O),
-                names_glue = "{.value}_MPV{MPVPosition}"
+                names_glue = "{.value}_{location}_{lab}"
         )
 
-# Rename columns as needed
-reshaped_LUFA_CRDS.P8 <- reshaped_LUFA_CRDS.P8 %>%
-        rename(
-                LUFA_CO2_in = CO2_MPV1,
-                LUFA_CO2_N = CO2_MPV3,
-                LUFA_CO2_S = CO2_MPV2,
-                LUFA_CH4_in = CH4_MPV1,
-                LUFA_CH4_N = CH4_MPV3,
-                LUFA_CH4_S = CH4_MPV2,
-                LUFA_NH3_in = NH3_MPV1,
-                LUFA_NH3_N = NH3_MPV3,
-                LUFA_NH3_S = NH3_MPV2,
-                LUFA_H2O_in = H2O_MPV1,
-                LUFA_H2O_N = H2O_MPV3,
-                LUFA_H2O_S = H2O_MPV2
-        )
-
-# Convert hour to datetime format
-reshaped_LUFA_CRDS.P8$hour <- ymd_hms(reshaped_LUFA_CRDS.P8$hour)
+# Convert DATE.TIME to datetime format
+LUFA_long$DATE.TIME <- ymd_hms(LUFA_long$DATE.TIME)
 
 # Write csv day wise
-reshaped_LUFA_CRDS.P8 <- reshaped_LUFA_CRDS.P8 %>% filter(hour >= ymd_hms("2025-04-08 12:00:00"), hour <= ymd_hms("2025-04-15 12:59:59"))
-write.csv(reshaped_LUFA_CRDS.P8,"20250408-15_hourly_LUFA_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
+write.csv(LUFA_long,"20250408-15_long_LUFA_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
