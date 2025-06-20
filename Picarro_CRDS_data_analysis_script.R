@@ -38,11 +38,11 @@ ATB_CRDS.P8 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-1
 ATB_CRDS.P8$DATE.TIME <- ymd_hms(ATB_CRDS.P8$DATE.TIME)
 
 # Create an hourly timestamp to group by
-ATB_CRDS.P8$hour <- floor_date(ATB_CRDS.P8$DATE.TIME, "hour")
+ATB_CRDS.P8$DATE.TIME <- floor_date(ATB_CRDS.P8$DATE.TIME, "hour")
 
 # Calculate the hourly average for each gas by MPVPosition
-ATB_averages <- ATB_CRDS.P8 %>%
-        group_by(hour, MPVPosition) %>%
+ATB_avg <- ATB_CRDS.P8 %>%
+        group_by(DATE.TIME, MPVPosition) %>%
         summarise(
                 CO2 = mean(CO2, na.rm = TRUE),
                 CH4 = mean(CH4, na.rm = TRUE),
@@ -51,38 +51,34 @@ ATB_averages <- ATB_CRDS.P8 %>%
                 .groups = "drop"  # To avoid warning about grouping
         )
 
+ATB_avg <- ATB_avg %>%
+        mutate(
+                location = recode(as.factor(location),
+                                  `1` = "N",
+                                  `2` = "in",
+                                  `3` = "S"),
+                lab = "ATB",
+                analyzer = "CRDS.P8"
+        )
+
+# Write csv
+write.csv(ATB_avg,"20250408-15_hourly_ATB_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
+
+
 # Reshape to wide format, each gas and MPVPosition combination becomes a column
-reshaped_ATB_CRDS.P8 <- ATB_averages %>%
-        filter(MPVPosition %in% c(1,2,3)) %>%
+ATB_long <- ATB_avg %>%
         pivot_wider(
-                names_from = MPVPosition,
+                names_from = c(location,lab),
                 values_from = c(CO2, CH4, NH3, H2O),
-                names_glue = "{.value}_MPV{MPVPosition}"
+                names_glue = "{.value}_{location}_{lab}"
         )
 
-# Rename columns as needed
-reshaped_ATB_CRDS.P8 <- reshaped_ATB_CRDS.P8 %>%
-        rename(
-                ATB_CO2_in = CO2_MPV2,
-                ATB_CO2_N = CO2_MPV1,
-                ATB_CO2_S = CO2_MPV3,
-                ATB_CH4_in = CH4_MPV2,
-                ATB_CH4_N = CH4_MPV1,
-                ATB_CH4_S = CH4_MPV3,
-                ATB_NH3_in = NH3_MPV2,
-                ATB_NH3_N = NH3_MPV1,
-                ATB_NH3_S = NH3_MPV3,
-                ATB_H2O_in = H2O_MPV2,
-                ATB_H2O_N = H2O_MPV1,
-                ATB_H2O_S = H2O_MPV3
-        )
 
-# Convert hour to datetime format
-reshaped_ATB_CRDS.P8$hour <- ymd_hms(reshaped_ATB_CRDS.P8$hour)
+# Convert DATE.TIME to datetime format
+ATB_long$DATE.TIME <- ymd_hms(ATB_long$DATE.TIME)
 
 # Write csv day wise
-reshaped_ATB_CRDS.P8 <- reshaped_ATB_CRDS.P8 %>% filter(hour >= ymd_hms("2025-04-08 12:00:00"), hour <= ymd_hms("2025-04-15 12:59:59"))
-write.csv(reshaped_ATB_CRDS.P8,"20250408-15_hourly_ATB_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
+write.csv(ATB_long,"20250408-15_long_ATB_CRDS.P8.csv" , row.names = FALSE, quote = FALSE)
 
 
 ####### UB Data importing and cleaning ########
