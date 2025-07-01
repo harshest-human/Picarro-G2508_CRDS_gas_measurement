@@ -32,9 +32,10 @@ ATB_CRDS.1 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/
 
 
 # Read in the data
-ATB_CRDS.1 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15_Ring_7.5_cycle_ATB_CRDS.1.csv")
+ATB_CRDS.1 <- read.csv("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15_Ring_7.5_cycle_ATB_CRDS.1.csv")
 
 # Create an hourly timestamp to group by
+ATB_CRDS.1$DATE.TIME <- as.POSIXct(ATB_CRDS.1$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
 ATB_CRDS.1$DATE.TIME <- floor_date(ATB_CRDS.1$DATE.TIME, "hour")
 
 # Calculate the hourly average for each gas by MPVPosition
@@ -61,6 +62,7 @@ ATB_avg <- ATB_avg %>%
 
 # Write csv
 ATB_avg <- ATB_avg %>% select(DATE.TIME, MPVPosition, location, lab, analyzer, everything())
+ATB_avg$DATE.TIME <- format(ATB_avg$DATE.TIME, "%Y-%m-%d %H:%M:%S")
 write.csv(ATB_avg,"20250408-15_hourly_ATB_CRDS.1.csv" , row.names = FALSE, quote = FALSE)
 
 # Reshape to wide format, each gas and MPVPosition combination becomes a column
@@ -98,9 +100,10 @@ UB_CRDS.2 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringversuc
 
 
 # Read in the data
-UB_CRDS.2 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15_Ring_7.5_cycle_UB_CRDS.2.csv")
+UB_CRDS.2 <- read.csv("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15_Ring_7.5_cycle_UB_CRDS.2.csv")
 
 # Create an hourly timestamp to group by
+UB_CRDS.2$DATE.TIME <- as.POSIXct(UB_CRDS.2$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
 UB_CRDS.2$DATE.TIME <- floor_date(UB_CRDS.2$DATE.TIME, "hour")
 
 # Calculate the hourly average for each gas by MPVPosition
@@ -127,6 +130,7 @@ UB_avg <- UB_avg %>%
 
 # Write csv
 UB_avg <- UB_avg %>% select(DATE.TIME, MPVPosition, location, lab, analyzer, everything())
+UB_avg$DATE.TIME <- format(UB_avg$DATE.TIME, "%Y-%m-%d %H:%M:%S")
 write.csv(UB_avg,"20250408-15_hourly_UB_CRDS.2.csv" , row.names = FALSE, quote = FALSE)
 
 
@@ -164,9 +168,10 @@ LUFA_CRDS.3 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringvers
 
 
 # Read in the data
-LUFA_CRDS.3 <- fread("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15_Ring_7.5_cycle_LUFA_CRDS.3.csv")
+LUFA_CRDS.3 <- read.csv("D:/Data Analysis/Gas_data/Clean_data/CRDS_clean/20250408-15_Ring_7.5_cycle_LUFA_CRDS.3.csv")
 
 # Create an hourly timestamp to group by
+LUFA_CRDS.3$DATE.TIME <- as.POSIXct(LUFA_CRDS.3$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
 LUFA_CRDS.3$DATE.TIME <- floor_date(LUFA_CRDS.3$DATE.TIME, "hour")
 
 # Calculate the hourly average for each gas by MPVPosition
@@ -193,6 +198,7 @@ LUFA_avg <- LUFA_avg %>%
 
 # Write csv
 LUFA_avg <- LUFA_avg %>% select(DATE.TIME, MPVPosition, location, lab, analyzer, everything())
+LUFA_avg$DATE.TIME <- format(LUFA_avg$DATE.TIME, "%Y-%m-%d %H:%M:%S")
 write.csv(LUFA_avg,"20250408-15_hourly_LUFA_CRDS.3.csv" , row.names = FALSE, quote = FALSE)
 
 # Reshape to wide format, each gas and MPVPosition combination becomes a column
