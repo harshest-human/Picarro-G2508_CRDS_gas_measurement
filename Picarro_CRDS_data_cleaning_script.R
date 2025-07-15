@@ -133,7 +133,6 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, anal
         
         # Remove step_id before final select
         summarized <- summarized %>%
-                select(-step_id) %>%
                 mutate(analyzer = analyzer) %>%
                 select(DATE.TIME, MPVPosition, everything())  # Reorder columns
         
