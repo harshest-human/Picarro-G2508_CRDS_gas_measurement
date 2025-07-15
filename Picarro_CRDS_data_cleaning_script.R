@@ -129,9 +129,13 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, anal
                         DATE.TIME = last(timestamp_for_step),
                         across(all_of(gas), ~ mean(.x, na.rm = TRUE)),
                         .groups = "drop"
-                ) %>%
-                select(DATE.TIME, MPVPosition, -step_id, everything()) %>%
-                mutate(analyzer = analyzer)  # Add analyzer column
+                )
+        
+        # Remove step_id before final select
+        summarized <- summarized %>%
+                select(-step_id) %>%
+                mutate(analyzer = analyzer) %>%
+                select(DATE.TIME, MPVPosition, everything())  # Reorder columns
         
         if ("NH3" %in% colnames(summarized)) {
                 summarized <- summarized %>%
@@ -155,8 +159,6 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, anal
         
         return(summarized)
 }
-
-
 
 
 #### Example usage
