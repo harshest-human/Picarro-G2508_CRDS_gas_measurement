@@ -130,7 +130,7 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, anal
                         across(all_of(gas), ~ mean(.x, na.rm = TRUE)),
                         .groups = "drop"
                 ) %>%
-                select(DATE.TIME, MPVPosition, everything()) %>%
+                select(DATE.TIME, MPVPosition, -step_id, everything()) %>%
                 mutate(analyzer = analyzer)  # Add analyzer column
         
         if ("NH3" %in% colnames(summarized)) {
@@ -159,16 +159,14 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, anal
 
 
 
-
 #### Example usage
-#input_path <- "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/04"
-#output_path <- "D:/Data Analysis/Gas_data/Clean_data/CRDS_clean"
-#result_file_name <- "20250408_Ring_concatenated"
-#gas <- c("CO2", "CH4", "NH3", "H2O")
-#start_time = "2025-04-08 12:00:00"
-#end_time = "2025-04-08 22:07:30"
-#flush = 180  # Flush time in seconds
-#interval = 450  # Interval for aggregation in seconds (can be changed to any value)
-
-#CRDS_data <- piclean(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval)
+#piclean(
+        #input_path = "data/",
+        #gas = c("CO2", "CH4", "NH3"),
+        #start_time = "2025-05-08 13:15:00",
+        #end_time   = "2025-05-15 00:44:00",
+        #flush = 60,
+        #interval = 240,
+        #analyzer = "ATB"
+#)
 
