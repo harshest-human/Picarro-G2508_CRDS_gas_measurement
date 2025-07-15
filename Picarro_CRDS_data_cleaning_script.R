@@ -52,7 +52,7 @@ piconcatenate <- function(input_path, output_path, result_file_name, selected_co
 
 
 ################# Development of piclean function #########################
-piclean <- function(input_path, gas, start_time, end_time, flush, interval, analyzer) {
+piclean <- function(input_path, gas, start_time, end_time, flush, interval) {
         library(dplyr)
         library(lubridate)
         
@@ -133,7 +133,6 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, anal
         
         # Remove step_id before final select
         summarized <- summarized %>%
-                mutate(analyzer = analyzer) %>%
                 select(DATE.TIME, MPVPosition, everything())  # Reorder columns
         
         if ("NH3" %in% colnames(summarized)) {
@@ -147,7 +146,7 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, anal
         # Format start and end times for file naming
         start_str <- format(as.POSIXct(start_time), "%Y%m%d%H%M%S")
         end_str <- format(as.POSIXct(end_time), "%Y%m%d%H%M%S")
-        file_name <- paste0(start_str, "-", end_str, "_7.5min_gas_", analyzer, ".csv")
+        file_name <- paste0(start_str, "-", end_str, "_7.5min_gas_",".csv")
         full_output_path <- file.path(getwd(), file_name)
         
         cat("Exporting final data to file...\n")
@@ -167,7 +166,5 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, anal
         #start_time = "2025-05-08 13:15:00",
         #end_time   = "2025-05-15 00:44:00",
         #flush = 60,
-        #interval = 240,
-        #analyzer = "ATB"
-#)
+        #interval = 240)
 
