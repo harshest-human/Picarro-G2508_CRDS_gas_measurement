@@ -52,7 +52,7 @@ piconcatenate <- function(input_path, output_path, result_file_name, selected_co
 
 
 ################# Development of piclean function #########################
-piclean <- function(input_path, output_path, result_file_name, gas, start_time, end_time, flush, interval) {
+piclean <- function(input_path, gas, start_time, end_time, flush, interval, analyzer) {
         library(dplyr)
         library(lubridate)
         
@@ -109,45 +109,29 @@ piclean <- function(input_path, output_path, result_file_name, gas, start_time, 
             "(", round(non_integer_mpv / total_mpv * 100, 2), "%)\n")
         
         merged_data <- merged_data %>%
-                filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0)
-        
-        cat("Sorting and computing representative values per MPVPosition step...\n")
-        merged_data <- merged_data %>% arrange(DATE.TIME)
-        
-        # Create an index based on MPVPosition changes
-        merged_data <- merged_data %>%
+                filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0) %>%
+                arrange(DATE.TIME) %>%
                 mutate(step_id = cumsum(c(1, diff(MPVPosition) != 0)))
         
-        # Set the timestamp before applying flush time logic
         merged_data <- merged_data %>%
                 group_by(step_id, MPVPosition) %>%
                 arrange(DATE.TIME) %>%
-                mutate(timestamp_for_step = last(DATE.TIME))  # Set the timestamp as the last observation in each step
-        
-        # Apply the flush time logic: replace gas values with NA during the flush time
-        merged_data <- merged_data %>%
-                group_by(step_id, MPVPosition) %>%
-                arrange(DATE.TIME) %>%
+                mutate(timestamp_for_step = last(DATE.TIME)) %>%
                 mutate(time_rank = row_number()) %>%
-                # Use mutate to apply across gas columns and set them to NA during the flush time
                 mutate(across(all_of(gas), ~ if_else(time_rank <= flush, NA_real_, .)))
         
-        # Now aggregate the data over the given interval (interval - flush) and compute the mean
         summarized <- merged_data %>%
                 group_by(step_id, MPVPosition) %>%
                 arrange(DATE.TIME) %>%
                 mutate(time_rank = row_number()) %>%
                 filter(time_rank <= interval) %>%
                 summarise(
-                        DATE.TIME = last(timestamp_for_step),  # Carry the timestamp from the last observation
+                        DATE.TIME = last(timestamp_for_step),
                         across(all_of(gas), ~ mean(.x, na.rm = TRUE)),
                         .groups = "drop"
-                )
-        
-        # Remove the step_id column from the summarized data
-        summarized <- summarized %>%
-                select(-step_id) %>%
-                select(DATE.TIME, MPVPosition, everything())  # Ensure correct column order
+                ) %>%
+                select(DATE.TIME, MPVPosition, everything()) %>%
+                mutate(analyzer = analyzer)  # Add analyzer column
         
         if ("NH3" %in% colnames(summarized)) {
                 summarized <- summarized %>%
@@ -157,15 +141,21 @@ piclean <- function(input_path, output_path, result_file_name, gas, start_time, 
         cat("Number of representative observations for each MPVPosition level:\n")
         print(table(summarized$MPVPosition))
         
-        full_output_path <- file.path(output_path, paste0(result_file_name, ".csv"))
+        # Format start and end times for file naming
+        start_str <- format(as.POSIXct(start_time), "%Y%m%d%H%M%S")
+        end_str <- format(as.POSIXct(end_time), "%Y%m%d%H%M%S")
+        file_name <- paste0(start_str, "-", end_str, "_7.5min_gas_", analyzer, ".csv")
+        full_output_path <- file.path(getwd(), file_name)
+        
         cat("Exporting final data to file...\n")
         write.csv(summarized, full_output_path, row.names = FALSE, quote = FALSE)
         
-        cat("✔ Data successfully processed and saved as .csv file\n")
+        cat("✔ Data successfully processed and saved to:", full_output_path, "\n")
         cat("✔ Dataframe contains", ncol(summarized), "variables:\n", colnames(summarized), "\n")
         
         return(summarized)
 }
+
 
 
 
