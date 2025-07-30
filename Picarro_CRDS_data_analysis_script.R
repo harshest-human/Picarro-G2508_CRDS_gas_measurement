@@ -47,7 +47,12 @@ ATB_avg <- ATB_CRDS.1 %>%
                 NH3 = mean(NH3, na.rm = TRUE),
                 H2O = mean(H2O, na.rm = TRUE),
                 .groups = "drop"  # To avoid warning about grouping
-        )
+        )%>%
+        mutate(
+                CO2 = CO2 * 37.2,    # ppm to mg/m3 for CO2
+                CH4 = CH4 * 13.6,   # ppm to mg/m3 for CH4
+                NH3 = NH3 * 14.4,  # ppm to mg/m3 for NH3
+        ) 
 
 ATB_avg <- ATB_avg %>%
         filter(MPVPosition %in% c(1, 2, 3)) %>%
@@ -115,7 +120,12 @@ UB_avg <- UB_CRDS.2 %>%
                 NH3 = mean(NH3, na.rm = TRUE),
                 H2O = mean(H2O, na.rm = TRUE),
                 .groups = "drop"  # To avoid warning about grouping
-        )
+        )%>%
+        mutate(
+                CO2 = CO2 * 37.2,    # ppm to mg/m3 for CO2
+                CH4 = CH4 * 13.6,   # ppm to mg/m3 for CH4
+                NH3 = NH3 * 14.4,  # ppm to mg/m3 for NH3
+        ) 
 
 UB_avg <- UB_avg %>%
         filter(MPVPosition %in% c(1, 8, 9)) %>%
@@ -183,7 +193,12 @@ LUFA_avg <- LUFA_CRDS.3 %>%
                 NH3 = mean(NH3, na.rm = TRUE),
                 H2O = mean(H2O, na.rm = TRUE),
                 .groups = "drop"  # To avoid warning about grouping
-        )
+        )%>%
+        mutate(
+                CO2 = CO2 * 37.2,    # ppm to mg/m3 for CO2
+                CH4 = CH4 * 13.6,   # ppm to mg/m3 for CH4
+                NH3 = NH3 * 14.4,  # ppm to mg/m3 for NH3
+        ) 
 
 LUFA_avg <- LUFA_avg %>%
         filter(MPVPosition %in% c(1, 2, 3)) %>%
