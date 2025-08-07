@@ -102,6 +102,7 @@ piclean <- function(input_path,
                         CO2_ppm = if ("CO2" %in% colnames(.)) CO2 else NA_real_,
                         CH4_ppm = if ("CH4" %in% colnames(.)) CH4 else NA_real_,
                         NH3_ppm = if ("NH3" %in% colnames(.)) NH3 / 1000 else NA_real_,
+                       H2O_vol = if ("H2O" %in% colnames(.)) CH4 else NA_real_,
                         R = 8.314472,
                         T = 273.15,
                         P = 1013.25 * 100,
@@ -109,7 +110,7 @@ piclean <- function(input_path,
                         CH4_mgm3 = (CH4_ppm / 1000 * 16.04 * P) / (R * T),
                         NH3_mgm3 = (NH3_ppm / 1000 * 17.031 * P) / (R * T)
                 ) %>%
-                select(-all_of(gas), -R, -T, -P, DATE.TIME, lab, analyzer, everything())
+                select(DATE.TIME, lab, analyzer, everything(),-all_of(gas), -R, -T, -P)
         
         # Step 8: Add lab & analyzer info
         cat("Adding lab and analyzer info...\n")
