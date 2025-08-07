@@ -1,6 +1,6 @@
 
 ################# Development of piclean function #########################
-piclean_adapted <- function(input_path, gas, start_time, end_time, flush, interval, MPVPosition.levels, location.levels = NULL, lab, analyzer) {
+piclean <- function(input_path, gas, start_time, end_time, flush, interval, MPVPosition.levels, location.levels = NULL, lab, analyzer) {
         library(dplyr)
         library(lubridate)
         library(tidyr)
