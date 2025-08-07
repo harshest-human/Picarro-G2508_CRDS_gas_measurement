@@ -59,13 +59,13 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
         
         merged_data <- merged_data %>%
                 filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0) %>%
-                arrange(DATE.TIME)
+                arrange(DATE.TIME) %>%
+                mutate(step_id = cumsum(c(1, diff(MPVPosition) != 0)))
         
-        # Create fixed interval bins (e.g. every interval minutes)
-        fixed_interval_sec <- interval * 60
+        # Create fixed interval bins (interval is in seconds, so no multiplication)
         time_bins <- seq(from = as.POSIXct(start_time, tz = "UTC"), 
                          to = as.POSIXct(end_time, tz = "UTC"), 
-                         by = fixed_interval_sec)
+                         by = interval)
         
         merged_data <- merged_data %>%
                 mutate(interval_bin = cut(DATE.TIME, breaks = time_bins, right = FALSE))
@@ -80,9 +80,9 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
                 filter(count == 0)
         
         cat("Step diagnostics:\n")
-        cat("Total intervals:", length(time_bins)-1, "\n")
+        cat("Total intervals:", length(time_bins) - 1, "\n")
         cat("Intervals with zero measurements (missing data):", nrow(abnormal_intervals), "\n")
-        if(nrow(abnormal_intervals) > 0) {
+        if (nrow(abnormal_intervals) > 0) {
                 cat("Missing intervals:\n")
                 print(abnormal_intervals)
         }
@@ -91,7 +91,8 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
         merged_data <- merged_data %>%
                 group_by(interval_bin, MPVPosition) %>%
                 arrange(DATE.TIME) %>%
-                mutate(time_rank = row_number()) %>%
+                mutate(timestamp_for_step = last(DATE.TIME),
+                       time_rank = row_number()) %>%
                 mutate(across(all_of(gas), ~ if_else(time_rank <= flush, NA_real_, .))) %>%
                 ungroup()
         
@@ -99,24 +100,26 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
         summarized <- merged_data %>%
                 group_by(interval_bin, MPVPosition) %>%
                 arrange(DATE.TIME) %>%
+                mutate(time_rank = row_number()) %>%
                 filter(time_rank <= interval) %>%
                 summarise(
-                        DATE.TIME = max(DATE.TIME),
+                        DATE.TIME = max(timestamp_for_step),
                         across(all_of(gas), ~ mean(.x, na.rm = TRUE)),
                         .groups = "drop"
                 )
         
-        # Convert interval_bin to character (start time of interval)
+        # Convert interval_bin factor to character start time for DATE.TIME column (ISO-like)
         summarized <- summarized %>%
                 mutate(DATE.TIME = sub("\\[(.+),.*", "\\1", interval_bin)) %>%
-                mutate(DATE.TIME = gsub(" ", "T", DATE.TIME)) %>%  # replace space with T for ISO-like format
+                mutate(DATE.TIME = gsub(" ", "T", DATE.TIME)) %>%
                 select(-interval_bin) %>%
                 arrange(DATE.TIME, MPVPosition)
         
         # Add lab and analyzer columns
         summarized <- summarized %>%
                 mutate(lab = lab,
-                       analyzer = analyzer)
+                       analyzer = analyzer) %>%
+                select(DATE.TIME, MPVPosition, lab, analyzer, everything())
         
         # Convert NH3 from ppm to mg/m3 if present
         if ("NH3" %in% colnames(summarized)) {
@@ -131,7 +134,10 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
         start_str <- format(as.POSIXct(start_time, tz = "UTC"), "%Y%m%d%H%M%S")
         end_str <- format(as.POSIXct(end_time, tz = "UTC"), "%Y%m%d%H%M%S")
         
-        file_name <- paste0(start_str, "-", end_str, "_", lab, "_", interval, "_avg_", analyzer, "_.csv")
+        # interval in minutes for filename (seconds / 60)
+        interval_min <- interval / 60
+        
+        file_name <- paste0(start_str, "-", end_str, "_", lab, "_", interval_min, "_avg_", analyzer, "_.csv")
         full_output_path <- file.path(getwd(), file_name)
         
         cat("Exporting final data to file...\n")
@@ -142,7 +148,6 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
         
         return(summarized)
 }
-
 
 #### Example usage
 #piclean(
