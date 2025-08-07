@@ -1,60 +1,9 @@
 
-################# Development of piconcatenate function #######################
-
-piconcatenate <- function(input_path, output_path, result_file_name, selected_columns) {
-        
-        library(dplyr)
-        library(lubridate)
-        
-        # Task 1: Append data with selected columns only
-        appendData <- function() {
-                dat_files <- list.files(path = input_path, recursive = TRUE, pattern = "\\.dat$", full.names = TRUE)
-                total_files <- length(dat_files)
-                
-                # Initialize a list to store data frames
-                data_frames <- list()
-                
-                for (i in seq_along(dat_files)) {
-                        current_data <- read.table(dat_files[i], header = TRUE)
-                        
-                        # Select only the specified columns
-                        if (all(selected_columns %in% names(current_data))) {
-                                current_data <- current_data[, selected_columns, drop = FALSE]
-                        } else {
-                                warning(sprintf("File %s does not contain all specified columns.", dat_files[i]))
-                                next
-                        }
-                        
-                        # Append data frame to the list
-                        data_frames <- c(data_frames, list(current_data))
-                        
-                        # Print progress
-                        cat(sprintf("Processed file %d of %d\n", i, total_files))
-                }
-                
-                return(data_frames)
-        }
-        
-        # Execute task
-        list_of_data_frames <- appendData()
-        
-        # Combine the data frames into a single data frame
-        merged_data <- do.call(rbind, list_of_data_frames)
-        
-        # Construct the full output path with .csv extension
-        full_output_path <- file.path(output_path, paste0(result_file_name, ".csv"))
-        
-        # Write the merged data to a .csv file
-        write.table(merged_data, full_output_path, sep = ",", row.names = FALSE)
-        
-        return(merged_data)
-}
-
-
 ################# Development of piclean function #########################
-piclean <- function(input_path, gas, start_time, end_time, flush, interval) {
+piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab, analyzer) {
         library(dplyr)
         library(lubridate)
+        library(readr)
         
         required_cols <- c("DATE", "TIME", "MPVPosition")
         all_needed_cols <- unique(c(required_cols, gas))
@@ -89,7 +38,7 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval) {
         
         cat("Merging DATE and TIME column...\n")
         merged_data <- merged_data %>%
-                mutate(DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S")) %>%
+                mutate(DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")) %>%
                 select(-DATE, -TIME)
         
         if (!is.null(start_time) && !is.null(end_time)) {
@@ -97,8 +46,8 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval) {
                     "Start:", start_time, "\n",
                     "End:  ", end_time, "\n")
                 merged_data <- merged_data %>%
-                        filter(DATE.TIME >= as.POSIXct(start_time),
-                               DATE.TIME <= as.POSIXct(end_time))
+                        filter(DATE.TIME >= as.POSIXct(start_time, tz = "UTC"),
+                               DATE.TIME <= as.POSIXct(end_time, tz = "UTC"))
         }
         
         cat("Removing non-integer and zero MPVPosition values...\n")
@@ -110,31 +59,66 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval) {
         
         merged_data <- merged_data %>%
                 filter(!is.na(MPVPosition) & MPVPosition %% 1 == 0 & MPVPosition != 0) %>%
-                arrange(DATE.TIME) %>%
-                mutate(step_id = cumsum(c(1, diff(MPVPosition) != 0)))
+                arrange(DATE.TIME)
+        
+        # Create fixed interval bins (e.g. every interval minutes)
+        fixed_interval_sec <- interval * 60
+        time_bins <- seq(from = as.POSIXct(start_time, tz = "UTC"), 
+                         to = as.POSIXct(end_time, tz = "UTC"), 
+                         by = fixed_interval_sec)
         
         merged_data <- merged_data %>%
-                group_by(step_id, MPVPosition) %>%
-                arrange(DATE.TIME) %>%
-                mutate(timestamp_for_step = last(DATE.TIME)) %>%
-                mutate(time_rank = row_number()) %>%
-                mutate(across(all_of(gas), ~ if_else(time_rank <= flush, NA_real_, .)))
+                mutate(interval_bin = cut(DATE.TIME, breaks = time_bins, right = FALSE))
         
-        summarized <- merged_data %>%
-                group_by(step_id, MPVPosition) %>%
+        # Step diagnostics
+        interval_counts <- merged_data %>%
+                group_by(interval_bin) %>%
+                summarise(count = n()) %>%
+                ungroup()
+        
+        abnormal_intervals <- interval_counts %>%
+                filter(count == 0)
+        
+        cat("Step diagnostics:\n")
+        cat("Total intervals:", length(time_bins)-1, "\n")
+        cat("Intervals with zero measurements (missing data):", nrow(abnormal_intervals), "\n")
+        if(nrow(abnormal_intervals) > 0) {
+                cat("Missing intervals:\n")
+                print(abnormal_intervals)
+        }
+        
+        # Apply flush logic per interval_bin and MPVPosition
+        merged_data <- merged_data %>%
+                group_by(interval_bin, MPVPosition) %>%
                 arrange(DATE.TIME) %>%
                 mutate(time_rank = row_number()) %>%
+                mutate(across(all_of(gas), ~ if_else(time_rank <= flush, NA_real_, .))) %>%
+                ungroup()
+        
+        # Summarise per interval_bin and MPVPosition, averaging up to interval points after flush
+        summarized <- merged_data %>%
+                group_by(interval_bin, MPVPosition) %>%
+                arrange(DATE.TIME) %>%
                 filter(time_rank <= interval) %>%
                 summarise(
-                        DATE.TIME = last(timestamp_for_step),
+                        DATE.TIME = max(DATE.TIME),
                         across(all_of(gas), ~ mean(.x, na.rm = TRUE)),
                         .groups = "drop"
                 )
         
-        # Remove step_id before final select
+        # Convert interval_bin to character (start time of interval)
         summarized <- summarized %>%
-                select(DATE.TIME, MPVPosition, everything())  # Reorder columns
+                mutate(DATE.TIME = sub("\\[(.+),.*", "\\1", interval_bin)) %>%
+                mutate(DATE.TIME = gsub(" ", "T", DATE.TIME)) %>%  # replace space with T for ISO-like format
+                select(-interval_bin) %>%
+                arrange(DATE.TIME, MPVPosition)
         
+        # Add lab and analyzer columns
+        summarized <- summarized %>%
+                mutate(lab = lab,
+                       analyzer = analyzer)
+        
+        # Convert NH3 from ppm to mg/m3 if present
         if ("NH3" %in% colnames(summarized)) {
                 summarized <- summarized %>%
                         mutate(NH3 = NH3 / 1000)
@@ -143,14 +127,15 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval) {
         cat("Number of representative observations for each MPVPosition level:\n")
         print(table(summarized$MPVPosition))
         
-        # Format start and end times for file naming
-        start_str <- format(as.POSIXct(start_time), "%Y%m%d%H%M%S")
-        end_str <- format(as.POSIXct(end_time), "%Y%m%d%H%M%S")
-        file_name <- paste0(start_str, "-", end_str, "_7.5min_gas_",".csv")
+        # Format start and end times for filename
+        start_str <- format(as.POSIXct(start_time, tz = "UTC"), "%Y%m%d%H%M%S")
+        end_str <- format(as.POSIXct(end_time, tz = "UTC"), "%Y%m%d%H%M%S")
+        
+        file_name <- paste0(start_str, "-", end_str, "_", lab, "_", interval, "_avg_", analyzer, "_.csv")
         full_output_path <- file.path(getwd(), file_name)
         
         cat("Exporting final data to file...\n")
-        write.csv(summarized, full_output_path, row.names = FALSE, quote = FALSE)
+        readr::write_excel_csv(summarized, full_output_path)
         
         cat("✔ Data successfully processed and saved to:", full_output_path, "\n")
         cat("✔ Dataframe contains", ncol(summarized), "variables:\n", colnames(summarized), "\n")
@@ -161,10 +146,13 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval) {
 
 #### Example usage
 #piclean(
-        #input_path = "data/",
+        #input_path = "./data_raw",
         #gas = c("CO2", "CH4", "NH3"),
-        #start_time = "2025-05-08 13:15:00",
-        #end_time   = "2025-05-15 00:44:00",
-        #flush = 60,
-        #interval = 240)
+        #start_time = "2025-04-08 12:00:00",
+        #end_time = "2025-04-15 23:59:59",
+        #flush = 180,
+        #interval = 450,       # interval in seconds
+        #lab = "ATB",
+        #analyzer = "CRDS.1")
+
 
