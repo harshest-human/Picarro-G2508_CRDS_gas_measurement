@@ -132,9 +132,9 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
                         lab = lab,
                         analyzer = analyzer
                 ) %>%
-                select(DATE.TIME, MPVPosition, lab, analyzer, everything(), -R, -T, -P) %>%
+                select(DATE.TIME, MPVPosition, lab, analyzer, everything(), -R, -T, -P, -interval_bin) %>%
                 arrange(DATE.TIME, MPVPosition) %>%
-                mutate(DATE.TIME = format(DATE.TIME, "%Y-%m-%dT%H:%M:%S"))
+                mutate(DATE.TIME = format(DATE.TIME, "%Y-%m-%d %H:%M:%S"))
         
         cat("Number of representative observations for each MPVPosition level:\n")
         print(table(summarized$MPVPosition))
