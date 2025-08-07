@@ -84,7 +84,7 @@ piclean <- function(input_path,
         
         # Step 6: Summarise by step_id with measuring.time
         summarized <- merged_data %>%
-                group_by(step_id, MPVPosition) %>%
+                group_by(step_id, MPVPosition, location) %>%
                 arrange(DATE.TIME) %>%
                 mutate(time_rank = row_number()) %>%
                 filter(time_rank <= interval) %>%
@@ -92,24 +92,21 @@ piclean <- function(input_path,
                         DATE.TIME = last(timestamp_for_step),
                         measuring.time = sum(time_rank > flush & time_rank <= interval),
                         across(all_of(gas), ~ mean(.x, na.rm = TRUE)),
-                        .groups = "drop"
-                )
+                        .groups = "drop")
         
         # Step 7: Convert units — always calculate ppm & mg/m3, remove original gas columns
         cat("Converting gas units...\n")
         summarized <- summarized %>%
-                mutate(lab = lab, analyzer = analyzer, location = location,
-                        CO2_ppm = if ("CO2" %in% colnames(.)) CO2 else NA_real_,
-                        CH4_ppm = if ("CH4" %in% colnames(.)) CH4 else NA_real_,
-                        NH3_ppm = if ("NH3" %in% colnames(.)) NH3 / 1000 else NA_real_,
+                mutate(CO2_ppm = if ("CO2" %in% colnames(.)) CO2 else NA_real_,
+                       CH4_ppm = if ("CH4" %in% colnames(.)) CH4 else NA_real_,
+                       NH3_ppm = if ("NH3" %in% colnames(.)) NH3 / 1000 else NA_real_,
                        H2O_vol = if ("H2O" %in% colnames(.)) H2O else NA_real_,
-                        R = 8.314472,
-                        T = 273.15,
-                        P = 1013.25 * 100,
-                        CO2_mgm3 = (CO2_ppm / 1000 * 44.01 * P) / (R * T),
-                        CH4_mgm3 = (CH4_ppm / 1000 * 16.04 * P) / (R * T),
-                        NH3_mgm3 = (NH3_ppm / 1000 * 17.031 * P) / (R * T)
-                ) %>%
+                       R = 8.314472,
+                       T = 273.15,
+                       P = 1013.25 * 100,
+                       CO2_mgm3 = (CO2_ppm / 1000 * 44.01 * P) / (R * T),
+                       CH4_mgm3 = (CH4_ppm / 1000 * 16.04 * P) / (R * T),
+                       NH3_mgm3 = (NH3_ppm / 1000 * 17.031 * P) / (R * T)) %>%
                 select(DATE.TIME, lab, analyzer, location, everything(),-all_of(gas), -R, -T, -P)
         
         # Step 8: Add lab & analyzer info
