@@ -45,8 +45,8 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
         
         merged_data <- do.call(rbind, list_of_data_frames)
         
-        # Step 2: Time parsing and filtering
-        cat("Merging DATE and TIME column...\n")
+        # Step 2: Parse date/time and filter
+        cat("Merging DATE and TIME columns...\n")
         merged_data <- merged_data %>%
                 mutate(DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")) %>%
                 select(-DATE, -TIME)
