@@ -132,7 +132,7 @@ piclean <- function(input_path, gas, start_time, end_time, flush, interval, lab,
                         lab = lab,
                         analyzer = analyzer
                 ) %>%
-                select(DATE.TIME, MPVPosition, lab, analyzer, everything(), -R, -T, -P, -interval_bin) %>%
+                select(DATE.TIME, MPVPosition, lab, analyzer, everything(), -R, -T, -P, -interval_bin, -all_of(gas)) %>%
                 arrange(DATE.TIME, MPVPosition) %>%
                 mutate(DATE.TIME = format(DATE.TIME, "%Y-%m-%d %H:%M:%S"))
         
