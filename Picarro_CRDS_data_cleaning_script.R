@@ -97,7 +97,8 @@ piclean <- function(input_path,
         # Step 7: Convert units — always calculate ppm & mg/m3, remove original gas columns
         cat("Converting gas units...\n")
         summarized <- summarized %>%
-                mutate(CO2_ppm = if ("CO2" %in% colnames(.)) CO2 else NA_real_,
+                mutate(lab = lab, analyzer = analyzer,
+                       CO2_ppm = if ("CO2" %in% colnames(.)) CO2 else NA_real_,
                        CH4_ppm = if ("CH4" %in% colnames(.)) CH4 else NA_real_,
                        NH3_ppm = if ("NH3" %in% colnames(.)) NH3 / 1000 else NA_real_,
                        H2O_vol = if ("H2O" %in% colnames(.)) H2O else NA_real_,
