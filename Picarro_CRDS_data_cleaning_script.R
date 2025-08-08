@@ -68,8 +68,11 @@ piclean <- function(input_path,
         
         # Step 4: Apply MPVPosition & location levels if provided
         if (!is.null(MPVPosition.levels)) {
-                merged_data$MPVPosition <- factor(merged_data$MPVPosition, levels = MPVPosition.levels)
+                merged_data <- merged_data %>%
+                        filter(MPVPosition %in% MPVPosition.levels) %>%
+                        mutate(MPVPosition = factor(MPVPosition, levels = MPVPosition.levels))
         }
+        
         if (!is.null(location.levels) && !is.null(MPVPosition.levels)) {
                 merged_data$location <- factor(location.levels[merged_data$MPVPosition], levels = location.levels)
         }
