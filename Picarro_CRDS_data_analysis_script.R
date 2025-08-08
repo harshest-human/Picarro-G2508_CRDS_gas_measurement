@@ -114,7 +114,12 @@ LUFA_CRDS.3 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringvers
                        analyzer = "CRDS.3")
 
 # Read in the data
-LUFA_7.5_avg <- read.csv("20250408.1200-20250415.2359_LUFA_450avg_CRDS.3.csv")
+LUFA_CRDS.3$DATE.TIME <- as.POSIXct(LUFA_CRDS.3$DATE.TIME, 
+                                    format = "%Y-%m-%d %H:%M:%S", tz = "UTC") - 20 # time offsetting
+
+write.csv(LUFA_CRDS.3,"20250408.1200-20250415.2359_LUFA_450avg_CRDS.3_corr.csv")
+
+LUFA_7.5_avg <- read.csv("20250408.1200-20250415.2359_LUFA_450avg_CRDS.3_corr.csv")
 
 # Reshape to wide format, each gas and MPVPosition combination becomes a column
 LUFA_wide <- LUFA_7.5_avg %>%
