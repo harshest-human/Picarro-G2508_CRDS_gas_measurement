@@ -94,7 +94,11 @@ piclean <- function(input_path,
                         DATE.TIME = last(timestamp_for_step),
                         measuring.time = sum(time_rank > flush & time_rank <= interval),
                         across(all_of(gas), ~ mean(.x, na.rm = TRUE)),
-                        .groups = "drop")
+                        .groups = "drop"
+                ) %>%
+                mutate(
+                        NH3 = if ("NH3" %in% colnames(.)) NH3 / 1000 else NA_real_
+                )
         
         # Step 7 REMOVED: No unit conversion here anymore
         
