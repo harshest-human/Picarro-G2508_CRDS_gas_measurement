@@ -107,7 +107,9 @@ UB_7.5_avg <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringversu
                      lab = "UB",
                      
                      analyzer = "CRDS.2")
-
+# Read in the data
+UB_7.5_avg$DATE.TIME <- as.POSIXct(UB_7.5_avg$DATE.TIME, 
+                                     format = "%Y-%m-%d %H:%M:%S")
 
 UB_7.5_avg <- UB_7.5_avg %>%
         mutate(DATE.TIME = ymd_hms(DATE.TIME),
@@ -139,7 +141,6 @@ UB_long <- UB_7.5_avg %>%
 
 # Write csv long
 write_excel_csv(UB_long,"20250408-14_UB_long_CRDS.2.csv")       
-
 
 # hourly averaged intervals wide format
 # Reshape to wide format, each gas and Line combination becomes a column
@@ -177,7 +178,7 @@ LUFA_7.5_avg <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringver
 
 # Read in the data
 LUFA_7.5_avg$DATE.TIME <- as.POSIXct(LUFA_7.5_avg$DATE.TIME, 
-                                    format = "%Y-%m-%d %H:%M:%S", tz = "UTC") - 20 # time offsetting
+                                    format = "%Y-%m-%d %H:%M:%S") - 20 # time offsetting
 
 
 LUFA_7.5_avg <- LUFA_7.5_avg %>%
