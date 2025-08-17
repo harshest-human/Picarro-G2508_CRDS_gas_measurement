@@ -105,6 +105,7 @@ UB_7.5_avg <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringversu
                      lab = "UB",
                      
                      analyzer = "CRDS.2")
+
 # Read in the data
 UB_7.5_avg$DATE.TIME <- as.POSIXct(UB_7.5_avg$DATE.TIME, 
                                      format = "%Y-%m-%d %H:%M:%S")
