@@ -231,3 +231,58 @@ CRDS9_20250710_inout <- CRDS9_20250710_avg %>%
 
 # Write wide csv
 write.csv(CRDS9_20250710_inout,"CRDS9_20250710_inout.csv" , row.names = FALSE, quote = FALSE)
+
+####### 2025-07-24 t 2025-08-19 ATB Data importing and cleaning ########
+CRDS9_20250724 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509/2025",
+                       
+                       gas = c("CO2", "CH4", "NH3", "H2O"),
+                       
+                       start_time = "2025-07-24 18:07:25",
+                       
+                       end_time = "2025-08-19 01:37:56",
+                       
+                       flush = 180, # Flush time in seconds
+                       
+                       interval = 450,  # Total time at MPVPosition in seconds
+                       
+                       MPVPosition.levels = c("1", "2", "3"),
+                       
+                       location.levels = c("N", "in", "S"),
+                       
+                       lab = "ATB",
+                       
+                       analyzer = "CRDS9")
+
+
+# Create an hourly timestamp to group by
+CRDS9_20250724$DATE.TIME <- as.POSIXct(CRDS9_20250724$DATE.TIME, format = "%Y-%m-%d %H:%M:%S")
+CRDS9_20250724$DATE.TIME <- floor_date(CRDS9_20250724$DATE.TIME, "hour")
+
+# Calculate the hourly average for each gas by MPVPosition
+CRDS9_20250724_avg <- CRDS9_20250724 %>%
+        select(-step_id) %>%
+        group_by(DATE.TIME, MPVPosition, location, lab, analyzer) %>%
+        summarise(
+                CO2 = mean(CO2, na.rm = TRUE),
+                CH4 = mean(CH4, na.rm = TRUE),
+                NH3 = mean(NH3, na.rm = TRUE),
+                H2O = mean(H2O, na.rm = TRUE),
+                N2O = mean(H2O, na.rm = TRUE),
+                .groups = "drop")  # To avoid warning about grouping
+
+
+# Write long csv
+CRDS9_20250724_avg$DATE.TIME <- format(CRDS9_20250724_avg$DATE.TIME, "%Y-%m-%d %H:%M:%S")
+write.csv(CRDS9_20250724_avg,"ATB_CRDS9_20250724_hourly_gas_conc.csv" , row.names = FALSE, quote = FALSE)
+
+# Change pivot to wide
+CRDS9_20250724_inout <- CRDS9_20250724_avg %>%
+        select(-MPVPosition) %>% 
+        pivot_wider(names_from = location,
+                    values_from = c(CO2, CH4, NH3, H2O, N2O),
+                    names_sep = "_")
+                
+
+# Write wide csv
+write.csv(CRDS9_20250724_inout,"CRDS9_20250724_inout.csv" , row.names = FALSE, quote = FALSE)
+
