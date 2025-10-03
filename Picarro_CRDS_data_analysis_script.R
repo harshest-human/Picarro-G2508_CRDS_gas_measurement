@@ -20,7 +20,7 @@ source("round to interval function.R")
 #Picarro G2508
 ATB_7.5_avg <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringversuche_2025_raw/ATB_CRDS_raw/2025",
                       
-                   gas = c("CO2", "CH4", "NH3", "H2O"),
+                   gas = c("CO2", "CH4", "NH3", "H2O", "N2O"),
                    
                    start_time = "2025-04-08 12:00:00",
                    
@@ -61,9 +61,10 @@ ATB_long <- ATB_7.5_avg %>%
         summarise(CO2_ppm = mean(CO2, na.rm = TRUE),
                   CH4_ppm = mean(CH4, na.rm = TRUE),
                   NH3_ppm = mean(NH3, na.rm = TRUE),
+                  N2O_ppm = mean(N2O, na.rm = TRUE),
                   H2O_vol = mean(H2O, na.rm = TRUE),
                   .groups = "drop")%>%
-        pivot_longer(cols = c(CO2_ppm, CH4_ppm, NH3_ppm, H2O_vol),
+        pivot_longer(cols = c(CO2_ppm, CH4_ppm, NH3_ppm, N2O_ppm, H2O_vol),
                      names_to = "var_unit",
                      values_to = "value")
 
@@ -88,7 +89,7 @@ write_excel_csv(ATB_wide,"20250408-14_ATB_wide_CRDS.1.csv")
 #Picarro G2508
 UB_7.5_avg <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringversuche_2025_raw/UB_CRDS_raw",
                      
-                     gas = c("CO2", "CH4", "NH3", "H2O"),
+                     gas = c("CO2", "CH4", "NH3", "H2O","N2O"),
                      
                      start_time = "2025-04-08 12:00:00",
                      
@@ -132,9 +133,10 @@ UB_long <- UB_7.5_avg %>%
         summarise(CO2_ppm = mean(CO2, na.rm = TRUE),
                   CH4_ppm = mean(CH4, na.rm = TRUE),
                   NH3_ppm = mean(NH3, na.rm = TRUE),
+                  N2O_ppm = mean(N2O, na.rm = TRUE),
                   H2O_vol = mean(H2O, na.rm = TRUE),
                   .groups = "drop")%>%
-        pivot_longer(cols = c(CO2_ppm, CH4_ppm, NH3_ppm, H2O_vol),
+        pivot_longer(cols = c(CO2_ppm, CH4_ppm, NH3_ppm, N2O_ppm, H2O_vol),
                      names_to = "var_unit",
                      values_to = "value")
 
@@ -157,7 +159,7 @@ write_excel_csv(UB_wide,"20250408-14_UB_wide_CRDS.2.csv")
 #Picarro G2508
 LUFA_7.5_avg <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/Ringversuche_2025_raw/LUFA_CRDS_raw",
                        
-                       gas = c("CO2", "CH4", "NH3", "H2O"),
+                       gas = c("CO2", "CH4", "NH3", "H2O","N2O"),
                        
                        start_time = "2025-04-08 12:00:00",
                        
@@ -203,9 +205,10 @@ LUFA_long <- LUFA_7.5_avg %>%
         summarise(CO2_ppm = mean(CO2, na.rm = TRUE),
                   CH4_ppm = mean(CH4, na.rm = TRUE),
                   NH3_ppm = mean(NH3, na.rm = TRUE),
+                  N2O_ppm = mean(N2O, na.rm = TRUE),
                   H2O_vol = mean(H2O, na.rm = TRUE),
                   .groups = "drop")%>%
-        pivot_longer(cols = c(CO2_ppm, CH4_ppm, NH3_ppm, H2O_vol),
+        pivot_longer(cols = c(CO2_ppm, CH4_ppm, NH3_ppm, N2O_ppm, H2O_vol),
                      names_to = "var_unit",
                      values_to = "value")
 
