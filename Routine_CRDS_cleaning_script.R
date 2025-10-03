@@ -63,58 +63,41 @@ CRDS8_20250925_20250930 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_d
 CRDS_20250925_20250930_combined_df <- rbind(CRDS9_20250925_20250930, CRDS8_20250925_20250930) %>%
         arrange(DATE.TIME)
 
-# Step 1: Filter in and S, copy in's DATE.TIME to S
-CRDS_20250925_20250930_in_S <- CRDS_20250925_20250930_combined_df %>%
+# Keep long format for dummy grid + join
+CRDS_20250925_20250930_hourly_long <- CRDS_20250925_20250930_combined_df %>%
         filter(location %in% c("in", "S")) %>%
-        mutate(DATE.HOUR = floor_date(DATE.TIME, "hour")) %>%
-        group_by(DATE.HOUR, lab, analyzer) %>%
-        mutate(
-                in_time = suppressWarnings(first(DATE.TIME[location == "in"])),
-                DATE.TIME = ifelse(location == "S" & !is.na(in_time),
-                                   in_time,
-                                   DATE.TIME)
+        mutate(step_id_S = step_id) %>%
+        left_join(
+                CRDS_20250925_20250930_combined_df %>%
+                        filter(location == "in") %>%
+                        transmute(step_id_S = step_id + 1, DATE.TIME_in = DATE.TIME, lab, analyzer),
+                by = c("step_id_S", "lab", "analyzer")
         ) %>%
-        ungroup() %>%
-        select(-in_time)
-
-
-
-
-# Step 1: Hourly aggregation (averaged across all locations)
-CRDS_20250925_20250930_hourly <- CRDS_20250925_20250930_combined_df %>%
-        filter(location %in% c("in", "S")) %>%
+        mutate(DATE.TIME = if_else(location == "S" & !is.na(DATE.TIME_in), DATE.TIME_in, DATE.TIME)) %>%
+        select(-DATE.TIME_in, -step_id_S) %>%
         mutate(DATE.HOUR = floor_date(DATE.TIME, "hour")) %>%
-        select(-step_id, -MPVPosition, -measuring.time) %>%
         group_by(DATE.HOUR, location, lab, analyzer) %>%
-        summarise(
-                CO2 = mean(CO2, na.rm = TRUE),
-                CH4 = mean(CH4, na.rm = TRUE),
-                NH3 = mean(NH3, na.rm = TRUE),
-                H2O = mean(H2O, na.rm = TRUE),
-                N2O = mean(N2O, na.rm = TRUE),
-                .groups = "drop") %>%
-        mutate(across(c(location, analyzer, lab), as.character))
+        summarise(across(c(CO2, CH4, NH3, H2O, N2O), ~mean(.x, na.rm = TRUE)), .groups = "drop")
 
-
-# Step 2: Create full grid of DATE.HOUR × analyzer × lab
+# Step 2: full grid still has location
 CRDS_20250925_20250930_dummy <- expand_grid(
-        DATE.HOUR = seq(
-                from = floor_date(min(CRDS_20250925_20250930_hourly$DATE.HOUR), "hour"),
-                to   = floor_date(max(CRDS_20250925_20250930_hourly$DATE.HOUR), "hour"),
-                by   = "hour"),
-        analyzer = unique(CRDS_20250925_20250930_hourly$analyzer),
-        location = unique(CRDS_20250925_20250930_hourly$location),
-        lab      = unique(CRDS_20250925_20250930_hourly$lab)) %>%
-        mutate(across(c(location, analyzer, lab), as.character))
+        DATE.HOUR = seq(min(CRDS_20250925_20250930_hourly_long$DATE.HOUR),
+                        max(CRDS_20250925_20250930_hourly_long$DATE.HOUR), by = "hour"),
+        analyzer = unique(CRDS_20250925_20250930_hourly_long$analyzer),
+        location = unique(CRDS_20250925_20250930_hourly_long$location),
+        lab      = unique(CRDS_20250925_20250930_hourly_long$lab))
+
+# Step 3: Join works, because location exists
+CRDS_20250925_20250930_hourly_wide <- CRDS_20250925_20250930_dummy %>%
+        left_join(CRDS_20250925_20250930_hourly_long,
+                  by = c("DATE.HOUR", "location", "analyzer", "lab")) %>%
+        pivot_wider(
+                names_from = location,
+                values_from = c(CO2, CH4, NH3, H2O, N2O),
+                names_sep = "_")
 
 
-# Step 3: Join to insert NA rows for missing hour × analyzer × lab
-CRDS_20250925_20250930_hourly_final <- CRDS_20250925_20250930_dummy %>%
-        left_join(CRDS_20250925_20250930_hourly,
-                  by = c("DATE.HOUR", "location", "analyzer", "lab"))
-
-
-write_excel_csv(CRDS_20250925_20250930_hourly_final, "H_CRDS9_20250925_20250930.csv")
+write_excel_csv(CRDS_20250925_20250930_hourly_wide, "H_CRDS9_20250925_20250930.csv")
 
 
 #Data Visualization
@@ -153,29 +136,3 @@ ggline(CRDS_combined_df,
        color = "orange4",
        add.params = list(width = 0.2)) +
         theme_minimal()
-
-# Calculate the hourly average of all MPVPosition
-CRDS_in_out <- CRDS_combined_df %>%
-        filter(location %in% c("in","out")) %>%
-        mutate(
-                DATE.TIME = if_else(location == "out",
-                                    DATE.TIME - seconds(450),  # shift out backwards
-                                    DATE.TIME),
-                DATE.HOUR = floor_date(DATE.TIME, "hour")
-        ) %>%
-        select(-step_id, -MPVPosition, -measuring.time) %>%
-        group_by(DATE.HOUR, location) %>%
-        summarise(
-                CO2 = mean(CO2, na.rm = TRUE),
-                CH4 = mean(CH4, na.rm = TRUE),
-                NH3 = mean(NH3, na.rm = TRUE),
-                H2O = mean(H2O, na.rm = TRUE),
-                .groups = "drop"
-        ) %>%
-        tidyr::pivot_wider(
-                names_from = location,
-                values_from = c(CO2, CH4, NH3, H2O),
-                names_sep = "_"
-        )
-
-write_excel_csv(CRDS_in_out, "H_CRDS_20250912-20250922.csv")
