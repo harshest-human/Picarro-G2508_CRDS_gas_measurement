@@ -13,6 +13,70 @@ library(readr)
 library(data.table)
 source("Picarro_CRDS_data_cleaning_script.R")
 
+####### 2025-08-19 to 2025-08-28 ATB Data importing and cleaning ########
+CRDS9_20250819_20250828 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509/2025",
+                                   
+                                   gas = c("CO2", "CH4", "NH3", "H2O", "N2O"),
+                                   
+                                   start_time = "2025-08-19 13:00:00",
+                                   
+                                   end_time = "2025-08-28 13:00:00",
+                                   
+                                   flush = 60, # Flush time in seconds
+                                   
+                                   interval = 240,  # Total time at MPVPosition in seconds
+                                   
+                                   MPVPosition.levels = c("1", "2", "3", "4", "5", "6", "7", "8",
+                                                          "9", "10", "11", "12", "13", "14", "15", "16"),
+                                   
+                                   location.levels = c("1", "3", "4", "6", "7", "9", "10", "12",
+                                                       "13", "15", "16", "18", "22", "24", "25", "27"),
+                                   
+                                   lab = "ATB",
+                                   
+                                   analyzer = "CRDS9")
+
+
+CRDS8_20250819_20250828 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025",
+                                   
+                                   gas = c("CO2", "CH4", "NH3", "H2O", "N2O"),
+                                   
+                                   start_time = "2025-08-19 13:00:00",
+                                   
+                                   end_time = "2025-08-28 13:00:00",
+                                   
+                                   flush = 60, # Flush time in seconds
+                                   
+                                   interval = 240,  # Total time at MPVPosition in seconds
+                                   
+                                   MPVPosition.levels = c("1", "2", "3", "4", "5", "6", "7", "8", 
+                                                          "9", "10", "11", "12", "13", "14", "15", "16"),
+                                   
+                                   location.levels = c("28", "30", "31", "33", "34", "36", "37", "39",
+                                                       "40", "42", "43", "45", "46", "48", "49", "51"),
+                                   
+                                   lab = "ATB",
+                                   
+                                   analyzer = "CRDS8")
+
+# Combine both CRDS
+CRDS_20250819_20250828_combined_df <- rbind(CRDS9_20250819_20250828, CRDS8_20250819_20250828) %>%
+        arrange(DATE.TIME)
+
+# Keep long format for dummy grid + join
+CRDS_20250819_20250828_hourly_wide <- CRDS_20250819_20250828_combined_df %>%
+        mutate(DATE.TIME = ymd_hms(DATE.TIME)) %>%
+        mutate(DATE.HOUR = floor_date(DATE.TIME, unit = "hour")) %>%
+        group_by(DATE.HOUR) %>%
+        summarise(CO2_ppm_in = mean(CO2, na.rm = TRUE),
+                  CH4_ppm_in = mean(CH4, na.rm = TRUE),
+                  NH3_ppm_in = mean(NH3, na.rm = TRUE),
+                  N2O_ppm_in = mean(N2O, na.rm = TRUE),
+                  H2O_vol_in = mean(H2O, na.rm = TRUE),
+                  .groups = "drop")
+
+write_excel_csv(CRDS_20250819_20250828_hourly_wide, "H_CRDS8+9_20250819_20250828.csv")
+
 ####### 2025-09-25 to 2025-09-30 ATB Data importing and cleaning ########
 CRDS9_20250925_20250930 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509/2025",
                           
