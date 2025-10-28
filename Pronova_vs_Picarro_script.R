@@ -235,7 +235,7 @@ ggsave(filename = file.path(plot_dir, "delta_N2O_plot.png"),
 
 ###### Statitistical Analyses #######
 # Compute mean relative error for each gas (without pivot_longer)
-relative_error_summary <- Gas_data %>%
+relative_error_summary <- Gas_oct %>%
         pivot_wider(
                 names_from = analyzer,
                 values_from = c(delta_CO2, delta_CH4, delta_N2O, delta_NH3)
@@ -247,5 +247,35 @@ relative_error_summary <- Gas_data %>%
                 RE_NH3 = mean(((delta_NH3_CRDS9 - delta_NH3_Pronova) / delta_NH3_Pronova) * 100, na.rm = TRUE)
         )
 
-relative_error_summary <- remove_outliers(relative_error_summary, exclude_cols = c("DATE.HOUR", "analyzer"), group_cols = NULL)
+# Convert to data frame for plotting
+relative_error_summary_df <- data.frame(
+        Gas = c("CO2", "CH4", "N2O", "NH3"),
+        Relative_Error = as.numeric(relative_error_summary[1, ])
+) %>% filter(Gas %in% c("CO2", "CH4", "NH3"))
 
+# --- Bar Plot ---
+gas_colors <- c(
+        "CO2" = "#1f78b4",
+        "CH4" = "#33a02c",  
+        "NH3" = "#ff7f00")
+
+re_plot <- ggplot(relative_error_summary_df, aes(x = Gas, y = Relative_Error, fill = Gas)) +
+        geom_col(width = 0.6) +
+        geom_text(aes(label = sprintf("%.1f%%", Relative_Error)), vjust = -0.5, size = 4) +
+        scale_fill_manual(values = gas_colors) +
+        scale_y_continuous(breaks = seq(-100, 100, by = 5)) +
+        labs(
+                title = "Relative Error (%) Pronova - Picarro",
+                x = NULL,
+                y = "Relative Error (%)"
+        ) +
+        theme_minimal(base_size = 12) +
+        theme(
+                legend.position = "none",
+                axis.text.x = element_text(face = "bold"),
+                plot.title = element_text(hjust = 0.5)
+        )
+
+ggsave(filename = file.path(plot_dir, "Relative_error.png"),
+       plot = re_plot,
+       width = 10, height = 5, dpi = 300)
