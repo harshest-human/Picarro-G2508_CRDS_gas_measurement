@@ -15,7 +15,6 @@ library(data.table)
 source("Picarro_CRDS_data_cleaning_script.R")
 
 ####### Import data ######
-# Read animal data and fix time zone
 GAS_Jun_2024 <- read.csv("D:/Data Analysis/Gas-Concentration-Analysis_time-series/2024_results/2024_June_GAS.long.csv") %>%
         mutate(analyzer = case_when(
                 ID == "MPVPosition.P9" ~ "CRDS9",
