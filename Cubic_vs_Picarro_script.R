@@ -20,5 +20,7 @@ CRDS <- CRDS %>% select(DATE, TIME, MPVPosition, CH4, NH3, CO2) %>%
         filter(DATE.TIME >= ymd_hms("2025-10-28 13:55:58"),
                DATE.TIME <= ymd_hms("2025-10-28 14:10:55")) %>%
         select(-"DATE", -"TIME")
+
+write.csv(CRDS, "20251028_CRDS.csv")
         
 CUBIC <- 
