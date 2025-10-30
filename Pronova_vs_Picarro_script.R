@@ -260,7 +260,7 @@ gas_colors <- c(
         "NH3" = "#ff7f00")
 
 re_plot <- ggplot(relative_error_summary_df, aes(x = Gas, y = Relative_Error, fill = Gas)) +
-        geom_col(width = 0.6) +
+        geom_col(width = 0.3) +
         geom_text(aes(label = sprintf("%.1f%%", Relative_Error)), vjust = -0.5, size = 4) +
         scale_fill_manual(values = gas_colors) +
         scale_y_continuous(breaks = seq(-100, 100, by = 5)) +
@@ -278,4 +278,4 @@ re_plot <- ggplot(relative_error_summary_df, aes(x = Gas, y = Relative_Error, fi
 
 ggsave(filename = file.path(plot_dir, "Relative_error.png"),
        plot = re_plot,
-       width = 10, height = 5, dpi = 300)
+       width = 6, height = 6, dpi = 300)
