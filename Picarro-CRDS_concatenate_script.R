@@ -111,3 +111,18 @@ GAS.comb <- CRDS.in[CRDS.out, on = .(hour), roll = "nearest"]
 # write
 write.csv(GAS.comb, "2024_Aug_Sep_GAS.in_out.csv", row.names = FALSE)
 
+
+
+
+######### New import and concatenate ###########
+CRDS8_QA_10.11 <- piconcatenate("D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/10") %>%
+        mutate(lab = "ATB", analyzer = "CRDS8") %>%
+        rename(Sampling_Point = MPVPosition)
+
+
+CRDS9_QA_10.11 <- piconcatenate("D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2509/2025/10")%>%
+        mutate(lab = "ATB", analyzer = "CRDS9") %>%
+        rename(Sampling_Point = MPVPosition)
+
+write_excel_csv(CRDS8_QA_10.11, "CRDS8_QA_10.11.csv")
+write_excel_csv(CRDS9_QA_10.11, "CRDS9_QA_10.11.csv")
