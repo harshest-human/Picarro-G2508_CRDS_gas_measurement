@@ -121,3 +121,51 @@ piclean <- function(input_path,
         
         return(summarized)
 }
+
+piconcatenate <- function(folder_path, output_csv = "combined_clean_data.csv") {
+        # Load necessary package
+        library(dplyr)
+        
+        # Get all .dat files in the folder
+        files <- list.files(folder_path, pattern = "\\.dat$", full.names = TRUE)
+        
+        if (length(files) == 0) {
+                stop("No .dat files found in the given folder.")
+        }
+        
+        # Define columns to keep
+        cols_to_keep <- c("DATE", "TIME", "MPVPosition", "CO2", "CH4", "NH3", "H2O", "N2O")
+        
+        # Read and combine all files
+        all_data <- files %>%
+                lapply(function(file) {
+                        # Read file
+                        df <- tryCatch({
+                                read.csv(file, sep = "", header = TRUE, stringsAsFactors = FALSE)
+                        }, error = function(e) {
+                                message("Error reading file: ", file, " — Skipping.")
+                                return(NULL)
+                        })
+                        
+                        # Keep only relevant columns (if present)
+                        if (!is.null(df)) {
+                                df <- df %>% select(any_of(cols_to_keep))
+                        }
+                        df
+                }) %>%
+                bind_rows()
+        
+        # Create a unified datetime column
+        all_data <- all_data %>%
+                mutate(
+                        DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+                ) %>%
+                select(DATE.TIME, everything())
+        
+        # Write to CSV
+        write.csv(all_data, file.path(folder_path, output_csv), row.names = FALSE)
+        
+        message("✅ Combined data saved to: ", file.path(folder_path, output_csv))
+        return(all_data)
+}
+
