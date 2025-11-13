@@ -160,7 +160,7 @@ piconcatenate <- function(folder_path, output_csv = "combined_clean_data.csv") {
                 mutate(
                         DATE.TIME = as.POSIXct(paste(DATE, TIME), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
                 ) %>%
-                select(DATE.TIME, everything())
+                select(DATE.TIME, everything(), -DATE, -TIME)
         
         # Write to CSV
         write.csv(all_data, file.path(folder_path, output_csv), row.names = FALSE)
