@@ -497,3 +497,120 @@ CRDS_20251024_20251030_hourly_wide <- CRDS_20251024_20251030_dummy %>%
 write_excel_csv(CRDS_20251024_20251030_hourly_wide, "H_CRDS8+9_20251024_20251030.csv")
 
 
+
+####### 2025-12-09 to 2025-12-31 ATB Data importing and cleaning ########
+CRDS8_20251209_20251231 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2025/12",
+                                   
+                                   gas = c("CO2", "CH4", "NH3", "H2O", "N2O"),
+                                   
+                                   start_time = "2025-12-09 12:00:00",
+                                   
+                                   end_time = "2025-12-31 23:59:59",
+                                   
+                                   flush = 60, # Flush time in seconds
+                                   
+                                   interval = 240,  # Total time at MPVPosition in seconds
+                                   
+                                   MPVPosition.levels = c("1", "2", "3", "4", "5", "6", "7", "8","9"),
+                                   
+                                   location.levels = c("1", "2", "3", "4", "5", "6", "7", "in", "S"),
+                                   
+                                   lab = "ATB",
+                                   
+                                   analyzer = "CRDS8")
+
+
+# Keep long format for dummy grid + join
+CRDS8_20251209_20251231_hourly_long <- CRDS8_20251209_20251231 %>%
+        filter(location %in% c("in", "S")) %>%
+        mutate(step_id_S = step_id) %>%
+        left_join(
+                CRDS8_20251209_20251231 %>%
+                        filter(location == "in") %>%
+                        transmute(step_id_S = step_id + 1, DATE.TIME_in = DATE.TIME, lab, analyzer),
+                by = c("step_id_S", "lab", "analyzer")
+        ) %>%
+        mutate(DATE.TIME = if_else(location == "S" & !is.na(DATE.TIME_in), DATE.TIME_in, DATE.TIME)) %>%
+        select(-DATE.TIME_in, -step_id_S) %>%
+        mutate(DATE.HOUR = floor_date(DATE.TIME, "hour")) %>%
+        group_by(DATE.HOUR, location, lab, analyzer) %>%
+        summarise(across(c(CO2, CH4, NH3, H2O, N2O), ~mean(.x, na.rm = TRUE)), .groups = "drop")
+
+# Step 2: full grid still has location
+CRDS8_20251209_20251231_dummy <- expand_grid(
+        DATE.HOUR = seq(min(CRDS8_20251209_20251231_hourly_long$DATE.HOUR),
+                        max(CRDS8_20251209_20251231_hourly_long$DATE.HOUR), by = "hour"),
+        analyzer = unique(CRDS8_20251209_20251231_hourly_long$analyzer),
+        location = unique(CRDS8_20251209_20251231_hourly_long$location),
+        lab      = unique(CRDS8_20251209_20251231_hourly_long$lab))
+
+# Step 3: Join works, because location exists
+CRDS8_20251209_20251231_hourly_wide <- CRDS8_20251209_20251231_dummy %>%
+        left_join(CRDS8_20251209_20251231_hourly_long,
+                  by = c("DATE.HOUR", "location", "analyzer", "lab")) %>%
+        pivot_wider(
+                names_from = location,
+                values_from = c(CO2, CH4, NH3, H2O, N2O),
+                names_sep = "_")
+
+write_excel_csv(CRDS8_20251209_20251231_hourly_wide, "H_CRDS9_20251209_20251231.csv")
+
+
+
+####### 2026-01-01 to 2026-01-19 ATB Data importing and cleaning ########
+CRDS8_20260101_20260119 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508",
+                                   
+                                   gas = c("CO2", "CH4", "NH3", "H2O", "N2O"),
+                                   
+                                   start_time = "2026-01-01 00:00:00",
+                                   
+                                   end_time = "2026-01-19 10:03:42",
+                                   
+                                   flush = 60, # Flush time in seconds
+                                   
+                                   interval = 240,  # Total time at MPVPosition in seconds
+                                   
+                                   MPVPosition.levels = c("1", "2", "3", "4", "5", "6", "7", "8","9"),
+                                   
+                                   location.levels = c("1", "2", "3", "4", "5", "6", "7", "in", "S"),
+                                   
+                                   lab = "ATB",
+                                   
+                                   analyzer = "CRDS8")
+
+
+# Keep long format for dummy grid + join
+CRDS8_20260101_20260119_hourly_long <- CRDS8_20260101_20260119 %>%
+        filter(location %in% c("in", "S")) %>%
+        mutate(step_id_S = step_id) %>%
+        left_join(
+                CRDS8_20260101_20260119 %>%
+                        filter(location == "in") %>%
+                        transmute(step_id_S = step_id + 1, DATE.TIME_in = DATE.TIME, lab, analyzer),
+                by = c("step_id_S", "lab", "analyzer")
+        ) %>%
+        mutate(DATE.TIME = if_else(location == "S" & !is.na(DATE.TIME_in), DATE.TIME_in, DATE.TIME)) %>%
+        select(-DATE.TIME_in, -step_id_S) %>%
+        mutate(DATE.HOUR = floor_date(DATE.TIME, "hour")) %>%
+        group_by(DATE.HOUR, location, lab, analyzer) %>%
+        summarise(across(c(CO2, CH4, NH3, H2O, N2O), ~mean(.x, na.rm = TRUE)), .groups = "drop")
+
+# Step 2: full grid still has location
+CRDS8_20260101_20260119_dummy <- expand_grid(
+        DATE.HOUR = seq(min(CRDS8_20260101_20260119_hourly_long$DATE.HOUR),
+                        max(CRDS8_20260101_20260119_hourly_long$DATE.HOUR), by = "hour"),
+        analyzer = unique(CRDS8_20260101_20260119_hourly_long$analyzer),
+        location = unique(CRDS8_20260101_20260119_hourly_long$location),
+        lab      = unique(CRDS8_20260101_20260119_hourly_long$lab))
+
+# Step 3: Join works, because location exists
+CRDS8_20260101_20260119_hourly_wide <- CRDS8_20260101_20260119_dummy %>%
+        left_join(CRDS8_20260101_20260119_hourly_long,
+                  by = c("DATE.HOUR", "location", "analyzer", "lab")) %>%
+        pivot_wider(
+                names_from = location,
+                values_from = c(CO2, CH4, NH3, H2O, N2O),
+                names_sep = "_")
+
+write_excel_csv(CRDS8_20260101_20260119_hourly_wide, "H_CRDS9_20260101_20260119.csv")
+
