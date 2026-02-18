@@ -42,6 +42,10 @@ CRDS_data <- bind_rows(
                delta_N2O = N2O_in - N2O_S) %>%
         select(DATE.HOUR, delta_CO2, delta_CH4, delta_NH3, delta_N2O,analyzer)
 
+CRDS_data <- CRDS_data %>% 
+        remove_outliers(exclude_cols = c("DATE.HOUR", "analyzer"),
+                        group_cols = c("DATE.HOUR"))
+
 
 ####### Import Pronova dataset #######
 #  Set folder path
@@ -90,6 +94,11 @@ Pronova_data  <- pronova_files %>%
                   delta_NH3 = mean(as.numeric(gsub(",", ".", `NH3 in ppm`)), na.rm = TRUE)) %>%
         mutate(analyzer = "Pronova")
 
+
+Pronova_data <- Pronova_data %>% 
+        remove_outliers(exclude_cols = c("DATE.HOUR", "analyzer"),
+                        group_cols = c("DATE.HOUR"))
+
 ####### Import Cubic dataset #########
 # 1. Set the directory path
 cubic_path <- "D:/Data Analysis/Gas_data/Raw_data/Cubic_raw"
@@ -118,39 +127,23 @@ Cubic_data <- files %>%
                analyzer = "Cubic") %>%
         select(DATE.HOUR, delta_CO2, delta_CH4, delta_NH3, analyzer)
 
+Cubic_data <- Cubic_data %>% 
+        remove_outliers(exclude_cols = c("DATE.HOUR", "analyzer"),
+                        group_cols = c("DATE.HOUR"))
+
 ####### Combine Picarro, Pronova, and Cubic #######
 Gas_data <- bind_rows(Pronova_data,CRDS_data, Cubic_data) %>% arrange(DATE.HOUR)
 Gas_data <- remove_outliers(Gas_data, exclude_cols = c("DATE.HOUR", "analyzer"), group_cols = NULL)
 
 ####### Data visulation #######
-trendcomp <- function(data, gas = "CO2", start_date, end_date, month_label, date_breaks = "2 day") {
+trendcomp <- function(data, gas = "CO2", start_date, end_date, month_label, date_breaks = "1 day") {
         
-        # Define colors: darker for CRDS, lighter for Pronova, add Cubic colors
+        # 3-color scheme: CRDS red, Pronova blue, Cubic green
         gas_colors <- list(
-                CO2 = c(
-                        "CRDS9"  = "#1f78b4",
-                        "CRDS8"  = "#1f78b4",
-                        "Pronova"= "#a6cee3",
-                        "Cubic"  = "#6a3d9a" 
-                ),
-                CH4 = c(
-                        "CRDS9"  = "#33a02c",
-                        "CRDS8"  = "#33a02c",
-                        "Pronova"= "#b2df8a",
-                        "Cubic"  = "#cab2d6"
-                ),
-                NH3 = c(
-                        "CRDS9"  = "#ff7f00",
-                        "CRDS8"  = "#ff7f00",
-                        "Pronova"= "#fdbf6f",
-                        "Cubic"  = "#fb9a99"
-                ),
-                N2O = c(
-                        "CRDS9"  = "#e31a1c",
-                        "CRDS8"  = "#e31a1c",
-                        "Pronova"= "#fb9a99",
-                        "Cubic"  = "#b15928"
-                )
+                CO2 = c("CRDS9" = "black", "CRDS8" = "black", "Pronova" = "#1f78b4", "Cubic" = "#33a02c"),
+                CH4 = c("CRDS9" = "black", "CRDS8" = "black", "Pronova" = "#1f78b4", "Cubic" = "#33a02c"),
+                NH3 = c("CRDS9" = "black", "CRDS8" = "black", "Pronova" = "#1f78b4", "Cubic" = "#33a02c"),
+                N2O = c("CRDS9" = "black", "CRDS8" = "black", "Pronova" = "#1f78b4", "Cubic" = "#33a02c")
         )
         
         # Select correct column dynamically
@@ -161,13 +154,6 @@ trendcomp <- function(data, gas = "CO2", start_date, end_date, month_label, date
                        DATE.HOUR <= end_date) %>%
                 filter(!is.na(.data[[gas_column]]))
         
-        # Trim whitespace from analyzer names
-        df$analyzer <- trimws(df$analyzer)
-        
-        # Only keep colors for analyzers actually present
-        available_levels <- unique(df$analyzer)
-        available_colors <- gas_colors[[gas]][available_levels]
-        
         y_labels <- list(
                 CO2 = expression(Delta~CO[2]~"(ppm)"),
                 CH4 = expression(Delta~CH[4]~"(ppm)"),
@@ -175,13 +161,12 @@ trendcomp <- function(data, gas = "CO2", start_date, end_date, month_label, date
                 N2O = expression(Delta~N[2]*O~"(ppm)")
         )
         
-        # Plot
+        # Line-only plot with transparency
         p <- ggplot(df, aes(DATE.HOUR, .data[[gas_column]], color = analyzer)) +
-                geom_line(size = 0.7) +
-                geom_point(size = 1.4, alpha = 0.75) +
-                scale_color_manual(values = available_colors) +
+                geom_line(size = 0.9, alpha = 0.7) +   # transparent lines
+                scale_color_manual(values = gas_colors[[gas]]) +
                 scale_x_datetime(date_breaks = date_breaks, date_labels = "%d-%b") +
-                labs(title = paste(month_label, "- Time Series of Delta", gas),
+                labs(title = paste(month_label, "- Trend of Delta", gas),
                      x = "Date",
                      y = y_labels[[gas]],
                      color = "Analyzer") +
@@ -192,6 +177,7 @@ trendcomp <- function(data, gas = "CO2", start_date, end_date, month_label, date
         
         return(p)
 }
+
 
 # October
 trendcomp(Gas_data, "CO2",
@@ -283,10 +269,8 @@ for (m in names(months)) {
                 
                 ggsave(filename = file.path(plot_dir, filename),
                        plot = p,
-                       width = 10,
-                       height = 5,
+                       width = 12,
+                       height = 6,
                        dpi = 300)
         }
 }
-
-
