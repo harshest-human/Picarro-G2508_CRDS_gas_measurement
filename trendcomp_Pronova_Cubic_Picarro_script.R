@@ -23,6 +23,7 @@ H_CRDS_20251101_20251112 <- read.csv("H_CRDS8+9_20251101_20251112.csv")
 H_CRDS_20251112_20251114 <- read.csv("H_CRDS8+9_20251112_20251114.csv") 
 H_CRDS_20251209_20251231 <- read.csv("H_CRDS8+9_20251209_20251231.csv") 
 H_CRDS_20260101_20260119 <- read.csv("H_CRDS8+9_20260101_20260119.csv")
+H_CRDS_20260217_20260223 <- read.csv("H_CRDS8+9_20260217_20260223.csv")
 
 # Combine all into one data frame
 CRDS_data <- bind_rows(
@@ -34,7 +35,8 @@ CRDS_data <- bind_rows(
         H_CRDS_20251101_20251112,
         H_CRDS_20251112_20251114,
         H_CRDS_20251209_20251231,
-        H_CRDS_20260101_20260119) %>%
+        H_CRDS_20260101_20260119,
+        H_CRDS_20260217_20260223) %>%
         mutate(DATE.HOUR = ymd_hms(DATE.HOUR),        
                delta_CO2 = CO2_in - CO2_S,       
                delta_CH4 = CH4_in - CH4_S,
@@ -243,16 +245,30 @@ trendcomp(Gas_data, "NH3",
           "2026-01-31 23:00:00",
           "January")
 
+# February
+trendcomp(Gas_data, "CO2",
+          "2026-02-17 00:00:00",
+          "2026-02-23 23:00:00",
+          "February")
+
+trendcomp(Gas_data, "CH4",
+          "2026-02-17 00:00:00",
+          "2026-02-23 23:00:00",
+          "February")
+
+trendcomp(Gas_data, "NH3",
+          "2026-02-17 00:00:00",
+          "2026-02-23 23:00:00",
+          "February")
+
+
 # Set a folder to save plots (optional)
 plot_dir <- "Picarro_vs_Pronova_vs_Cubic_Plots"
 if(!dir.exists(plot_dir)) dir.create(plot_dir)
 
 months <- list(
-        October  = c("2025-10-01 00:00:00", "2025-10-24 23:00:00"),
-        November = c("2025-11-01 00:00:00", "2025-11-30 23:00:00"),
-        December = c("2025-12-01 00:00:00", "2025-12-31 23:00:00"),
-        January  = c("2026-01-01 00:00:00", "2026-01-31 23:00:00")
-)
+        February  = c("2026-02-17 00:00:00",
+                      "2026-02-23 23:00:00"))
 
 gases <- c("CO2", "CH4", "NH3")
 
