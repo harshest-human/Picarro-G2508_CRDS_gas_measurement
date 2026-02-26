@@ -290,3 +290,42 @@ for (m in names(months)) {
                        dpi = 300)
         }
 }
+
+####### Data Analysis ######
+Gas_dec <- Gas_data %>%
+        select(-"delta_N2O") %>%
+        filter(DATE.HOUR >= ymd_hms("2025-12-09 12:00:00"),
+               DATE.HOUR <= ymd_hms("2026-01-01 01:00:00")) %>%
+        pivot_wider(names_from = analyzer,
+                    values_from = c(delta_CO2, delta_CH4, delta_NH3),
+                    names_sep = "_")
+
+Gas_dec_RE <- Gas_dec %>%
+        mutate(RE_CO2_Pronova = (delta_CO2_Pronova - delta_CO2_CRDS8) / delta_CO2_CRDS8 * 100,
+               RE_CO2_Cubic   = (delta_CO2_Cubic   - delta_CO2_CRDS8) / delta_CO2_CRDS8 * 100,
+               
+               RE_CH4_Pronova = (delta_CH4_Pronova - delta_CH4_CRDS8) / delta_CH4_CRDS8 * 100,
+               RE_CH4_Cubic   = (delta_CH4_Cubic   - delta_CH4_CRDS8) / delta_CH4_CRDS8 * 100,
+               
+               RE_NH3_Pronova = (delta_NH3_Pronova - delta_NH3_CRDS8) / delta_NH3_CRDS8 * 100,
+               RE_NH3_Cubic   = (delta_NH3_Cubic   - delta_NH3_CRDS8) / delta_NH3_CRDS8 * 100)
+
+compute_stats <- function(df, gas) {
+        pronova_diff <- df[[paste0("delta_", gas, "_Pronova")]] - df[[paste0("delta_", gas, "_CRDS8")]]
+        cubic_diff   <- df[[paste0("delta_", gas, "_Cubic")]]   - df[[paste0("delta_", gas, "_CRDS8")]]
+        
+        tibble(
+                gas = gas,
+                bias_pronova = mean(pronova_diff, na.rm = TRUE),
+                rmse_pronova = sqrt(mean(pronova_diff^2, na.rm = TRUE)),
+                bias_cubic   = mean(cubic_diff, na.rm = TRUE),
+                rmse_cubic   = sqrt(mean(cubic_diff^2, na.rm = TRUE))
+        )
+}
+
+gases <- c("CO2", "CH4", "NH3")
+
+stats_table <- map_dfr(gases, ~compute_stats(Gas_dec, .x))
+
+
+                
