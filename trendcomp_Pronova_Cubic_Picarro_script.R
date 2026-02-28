@@ -310,22 +310,161 @@ Gas_dec_RE <- Gas_dec %>%
                RE_NH3_Pronova = (delta_NH3_Pronova - delta_NH3_CRDS8) / delta_NH3_CRDS8 * 100,
                RE_NH3_Cubic   = (delta_NH3_Cubic   - delta_NH3_CRDS8) / delta_NH3_CRDS8 * 100)
 
-compute_stats <- function(df, gas) {
-        pronova_diff <- df[[paste0("delta_", gas, "_Pronova")]] - df[[paste0("delta_", gas, "_CRDS8")]]
-        cubic_diff   <- df[[paste0("delta_", gas, "_Cubic")]]   - df[[paste0("delta_", gas, "_CRDS8")]]
+write.csv(Gas_dec_RE, "Gas_dec_RE_20251209-20251231.csv")
+
+Gas_dec_RE <- read.csv("Gas_dec_RE_20251209-20251231.csv") %>%
+        mutate(DATE.HOUR = parse_date_time(DATE.HOUR, orders = c("Y-m-d H:M:S", "Y-m-d")))
+
+compute_drift <- function(df, gas, inst) {
+        diff_col <- paste0("delta_", gas, "_", inst)
+        ref_col  <- paste0("delta_", gas, "_CRDS8")
         
-        tibble(
-                gas = gas,
-                bias_pronova = mean(pronova_diff, na.rm = TRUE),
-                rmse_pronova = sqrt(mean(pronova_diff^2, na.rm = TRUE)),
-                bias_cubic   = mean(cubic_diff, na.rm = TRUE),
-                rmse_cubic   = sqrt(mean(cubic_diff^2, na.rm = TRUE))
-        )
+        df2 <- df %>%
+                mutate(diff = .data[[diff_col]] - .data[[ref_col]],
+                       t = as.numeric(DATE.HOUR - min(DATE.HOUR), units = "hours"))
+        
+        model <- lm(diff ~ t, data = df2)
+        coef(model)[2]   # slope = drift (ppm per hour)
 }
 
 gases <- c("CO2", "CH4", "NH3")
+instruments <- c("Pronova", "Cubic")
 
-stats_table <- map_dfr(gases, ~compute_stats(Gas_dec, .x))
+drift_results <- expand_grid(gas = gases, inst = instruments) %>%
+        mutate(drift_ppm_per_hour = map2_dbl(gas, inst, ~compute_drift(Gas_dec_RE, .x, .y)))
+
+compute_uncertainty <- function(df, gas, inst) {
+        inst_col <- paste0("delta_", gas, "_", inst)
+        ref_col  <- paste0("delta_", gas, "_CRDS8")
+        
+        diff <- df[[inst_col]] - df[[ref_col]]
+        rmse <- sqrt(mean(diff^2, na.rm = TRUE))
+        mean_ref <- mean(df[[ref_col]], na.rm = TRUE)
+        
+        tibble(
+                gas = gas,
+                instrument = inst,
+                rmse = rmse,
+                expanded_95 = 2 * rmse,
+                rel_uncertainty_percent = rmse / mean_ref * 100
+        )
+}
+
+uncertainty_results <- map_dfr(gases, function(g)
+        map_dfr(instruments, function(i) compute_uncertainty(Gas_dec_RE, g, i))
+)
+
+final_stat_results <- drift_results %>%
+        left_join(uncertainty_results,
+                  by = c("gas", "inst" = "instrument"))
 
 
-                
+compute_correlation <- function(df, gas, inst) {
+        inst_col <- paste0("delta_", gas, "_", inst)
+        ref_col  <- paste0("delta_", gas, "_CRDS8")
+        
+        df %>%
+                summarise(
+                        gas = gas,
+                        instrument = inst,
+                        r = cor(.data[[inst_col]], .data[[ref_col]], use = "complete.obs"),
+                        r2 = r^2
+                )
+}
+
+gases <- c("CO2","CH4","NH3")
+instruments <- c("Pronova","Cubic")
+
+correlation_results <- map_dfr(gases, function(g)
+        map_dfr(instruments, function(i) compute_correlation(Gas_dec_RE, g, i))
+)
+
+
+compute_ba <- function(df, gas, inst) {
+        inst_col <- paste0("delta_", gas, "_", inst)
+        ref_col  <- paste0("delta_", gas, "_CRDS8")
+        
+        diff <- df[[inst_col]] - df[[ref_col]]
+        mean_vals <- (df[[inst_col]] + df[[ref_col]]) / 2
+        
+        bias <- mean(diff, na.rm = TRUE)
+        sd_diff <- sd(diff, na.rm = TRUE)
+        
+        tibble(
+                gas = gas,
+                instrument = inst,
+                bias = bias,
+                loa_lower = bias - 1.96 * sd_diff,
+                loa_upper = bias + 1.96 * sd_diff
+        )
+}
+
+ba_results <- map_dfr(gases, function(g)
+        map_dfr(instruments, function(i) compute_ba(Gas_dec_RE, g, i))
+)
+
+######## Statistical Visualization #########
+out_dir <- "D:/Data Analysis/Picarro-G2508_CRDS_gas_measurement/Picarro_vs_Pronova_vs_Cubic_Plots"
+
+if (!dir.exists(out_dir)) {
+        dir.create(out_dir, recursive = TRUE)
+}
+
+plot_corr <- function(df, gas, inst) {
+        inst_col <- paste0("delta_", gas, "_", inst)
+        ref_col  <- paste0("delta_", gas, "_CRDS8")
+        
+        ggplot(df, aes(.data[[ref_col]], .data[[inst_col]])) +
+                geom_point(alpha = 0.4) +
+                geom_smooth(method = "lm", color = "blue") +
+                labs(
+                        title = paste("Correlation:", gas, inst),
+                        x = "CRDS8 (ppm)",
+                        y = paste(inst, "(ppm)")
+                ) +
+                theme_minimal()
+}
+
+for (g in gases) {
+        for (i in instruments) {
+                p <- plot_corr(Gas_dec_RE, g, i)
+                ggsave(filename = file.path(out_dir, paste0("CORR_", g, "_", i, ".png")),
+                       plot = p, width = 10, height = 6, dpi = 300)
+        }
+}
+ 
+plot_ba <- function(df, gas, inst) {
+        inst_col <- paste0("delta_", gas, "_", inst)
+        ref_col  <- paste0("delta_", gas, "_CRDS8")
+        
+        df2 <- df %>%
+                mutate(
+                        mean_vals = (.data[[inst_col]] + .data[[ref_col]]) / 2,
+                        diff = .data[[inst_col]] - .data[[ref_col]]
+                )
+        
+        bias <- mean(df2$diff, na.rm = TRUE)
+        sd_diff <- sd(df2$diff, na.rm = TRUE)
+        
+        ggplot(df2, aes(mean_vals, diff)) +
+                geom_point(alpha = 0.4) +
+                geom_hline(yintercept = bias, color = "blue", size = 1) +
+                geom_hline(yintercept = bias + 1.96 * sd_diff, linetype = "dashed", color = "red") +
+                geom_hline(yintercept = bias - 1.96 * sd_diff, linetype = "dashed", color = "red") +
+                labs(
+                        title = paste("Bland–Altman:", gas, inst),
+                        x = "Mean concentration (ppm)",
+                        y = "Difference (Instrument – CRDS8)"
+                ) +
+                theme_minimal()
+}
+
+instruments <- c("Pronova","Cubic")
+
+for (g in gases) {
+        for (i in instruments) {
+                p <- plot_ba(Gas_dec_RE, g, i)
+                ggsave(filename = file.path(out_dir, paste0("BA_", g, "_", i, ".png")),
+                       plot = p, width = 10, height = 6, dpi = 300)
+        }
+}               
