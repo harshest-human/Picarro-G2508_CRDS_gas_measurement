@@ -63,15 +63,238 @@ OTICE_data <- bind_rows(
                NH3_corr = NH3_ppm_barn_hourly) %>%
         select(-Datetime_Berlin, -Type, -Node)
                 
+####### Data visualization ######
+# -------------------------------
+# Step 1: Create weekly labels
+# -------------------------------
+OTICE_weekly <- OTICE_data %>%
+        mutate(
+                WeekLabel = paste0(month(DATE.HOUR, label = TRUE),
+                                   " W", week(DATE.HOUR) - week(floor_date(DATE.HOUR, "month")) + 1)
+        )
+
+CRDS_weekly <- CRDS_data %>%
+        mutate(
+                WeekLabel = paste0(month(DATE.HOUR, label = TRUE),
+                                   " W", week(DATE.HOUR) - week(floor_date(DATE.HOUR, "month")) + 1)
+        )
+
+# -------------------------------
+# Step 2: Order WeekLabel chronologically
+# -------------------------------
+all_weeks <- sort(unique(c(OTICE_weekly$WeekLabel, CRDS_weekly$WeekLabel)))
+
+OTICE_weekly <- OTICE_weekly %>%
+        mutate(WeekLabel = factor(WeekLabel, levels = all_weeks))
+
+CRDS_weekly <- CRDS_weekly %>%
+        mutate(WeekLabel = factor(WeekLabel, levels = all_weeks))
+
+# Filter September
+OTICE_sep <- OTICE_weekly %>%
+        filter(month(DATE.HOUR) == 9)
+
+CRDS_sep <- CRDS_weekly %>%
+        filter(month(DATE.HOUR) == 9)
+
+# Plot CO2 for September
+ggplot() +
+        geom_line(data = OTICE_sep,
+                  aes(x = DATE.HOUR,
+                      y = CO2_raw,
+                      color = location)) +
+        geom_line(data = CRDS_sep,
+                  aes(x = DATE.HOUR,
+                      y = CO2_raw,
+                      color = location)) +
+        facet_wrap(~ WeekLabel, scales = "free_x") +
+        theme_minimal() +
+        labs(x = "Date",
+             y = "CO2 (ppm)",
+             color = "Location") +
+        scale_x_datetime(date_labels = "%d-%b", date_breaks = "1 day") +
+        theme(
+                axis.text.x = element_text(angle = 45, hjust = 1),
+                strip.text = element_text(face = "bold")
+        )
+
+# NH3
+ggplot() +
+        geom_line(data = OTICE_sep,
+                  aes(x = DATE.HOUR,
+                      y = NH3_raw,
+                      color = location)) +
+        geom_line(data = CRDS_sep,
+                  aes(x = DATE.HOUR,
+                      y = NH3_raw,
+                      color = location)) +
+        facet_wrap(~ WeekLabel, scales = "free_x") +
+        theme_minimal() +
+        labs(x = "Date",
+             y = "NH3 (ppm)",
+             color = "Location") +
+        scale_x_datetime(date_labels = "%d-%b", date_breaks = "1 day") +
+        theme(
+                axis.text.x = element_text(angle = 45, hjust = 1),
+                strip.text = element_text(face = "bold")
+        )
+
+
+# Filter October
+OTICE_oct <- OTICE_weekly %>%
+        filter(month(DATE.HOUR) == 10)
+
+CRDS_oct <- CRDS_weekly %>%
+        filter(month(DATE.HOUR) == 10)
+
+# Plot CO2 for October
+ggplot() +
+        geom_line(data = OTICE_oct,
+                  aes(x = DATE.HOUR,
+                      y = CO2_raw,
+                      color = location)) +
+        geom_line(data = CRDS_oct,
+                  aes(x = DATE.HOUR,
+                      y = CO2_raw,
+                      color = location)) +
+        facet_wrap(~ WeekLabel, scales = "free_x") +
+        theme_minimal() +
+        labs(x = "Date",
+             y = "CO2 (ppm)",
+             color = "Location") +
+        scale_x_datetime(date_labels = "%d-%b", date_breaks = "2 days") +
+        theme(
+                axis.text.x = element_text(angle = 45, hjust = 1),
+                strip.text = element_text(face = "bold")
+        )
+
+# NH3
+ggplot() +
+        geom_line(data = OTICE_oct,
+                  aes(x = DATE.HOUR,
+                      y = NH3_raw,
+                      color = location)) +
+        geom_line(data = CRDS_oct,
+                  aes(x = DATE.HOUR,
+                      y = NH3_raw,
+                      color = location)) +
+        facet_wrap(~ WeekLabel, scales = "free_x") +
+        theme_minimal() +
+        labs(x = "Date",
+             y = "NH3 (ppm)",
+             color = "Location") +
+        scale_x_datetime(date_labels = "%d-%b", date_breaks = "2 days") +
+        theme(
+                axis.text.x = element_text(angle = 45, hjust = 1),
+                strip.text = element_text(face = "bold")
+        )
+
+
+OTICE_nov <- OTICE_weekly %>%
+        filter(month(DATE.HOUR) == 11)
+
+CRDS_nov <- CRDS_weekly %>%
+        filter(month(DATE.HOUR) == 11)
 
 ggplot() +
-        geom_line(data = OTICE_data,
-                  aes(DATE.HOUR, CO2_raw,
-                      color = location,
-                      linetype = analyzer)) +
-        geom_line(data = CRDS_data,
-                  aes(DATE.HOUR, CO2_raw,
-                      color = location,
-                      linetype = analyzer)) +
-        theme_minimal()
+        geom_line(data = OTICE_nov,
+                  aes(x = DATE.HOUR,
+                      y = CO2_raw,
+                      color = location)) +
+        geom_line(data = CRDS_nov,
+                  aes(x = DATE.HOUR,
+                      y = CO2_raw,
+                      color = location)) +
+        facet_wrap(~ WeekLabel, scales = "free_x") +
+        theme_minimal() +
+        labs(x = "Date",
+             y = "CO2 (ppm)",
+             color = "Location") +
+        scale_x_datetime(date_labels = "%d-%b", date_breaks = "2 days") +
+        theme(
+                axis.text.x = element_text(angle = 45, hjust = 1),
+                strip.text = element_text(face = "bold")
+        )
+
+# NH3
+OTICE_nov <- OTICE_weekly %>%
+        filter(month(DATE.HOUR) == 11)
+
+CRDS_nov <- CRDS_weekly %>%
+        filter(month(DATE.HOUR) == 11)
+
+ggplot() +
+        geom_line(data = OTICE_nov,
+                  aes(x = DATE.HOUR,
+                      y = NH3_raw,
+                      color = location)) +
+        geom_line(data = CRDS_nov,
+                  aes(x = DATE.HOUR,
+                      y = NH3_raw,
+                      color = location)) +
+        facet_wrap(~ WeekLabel, scales = "free_x") +
+        theme_minimal() +
+        labs(x = "Date",
+             y = "NH3 (ppm)",
+             color = "Location") +
+        scale_x_datetime(date_labels = "%d-%b", date_breaks = "2 days") +
+        theme(
+                axis.text.x = element_text(angle = 45, hjust = 1),
+                strip.text = element_text(face = "bold")
+        )
+
+
+OTICE_dec <- OTICE_weekly %>%
+        filter(month(DATE.HOUR) == 12)
+
+CRDS_dec <- CRDS_weekly %>%
+        filter(month(DATE.HOUR) == 12)
+
+ggplot() +
+        geom_line(data = OTICE_dec,
+                  aes(x = DATE.HOUR,
+                      y = CO2_raw,
+                      color = location)) +
+        geom_line(data = CRDS_dec,
+                  aes(x = DATE.HOUR,
+                      y = CO2_raw,
+                      color = location)) +
+        facet_wrap(~ WeekLabel, scales = "free_x") +
+        theme_minimal() +
+        labs(x = "Date",
+             y = "CO2 (ppm)",
+             color = "Location") +
+        scale_x_datetime(date_labels = "%d-%b", date_breaks = "2 days") +
+        theme(
+                axis.text.x = element_text(angle = 45, hjust = 1),
+                strip.text = element_text(face = "bold")
+        )
+
+# NH3
+OTICE_dec <- OTICE_weekly %>%
+        filter(month(DATE.HOUR) == 12)
+
+CRDS_dec <- CRDS_weekly %>%
+        filter(month(DATE.HOUR) == 12)
+
+ggplot() +
+        geom_line(data = OTICE_dec,
+                  aes(x = DATE.HOUR,
+                      y = NH3_raw,
+                      color = location)) +
+        geom_line(data = CRDS_dec,
+                  aes(x = DATE.HOUR,
+                      y = NH3_raw,
+                      color = location)) +
+        facet_wrap(~ WeekLabel, scales = "free_x") +
+        theme_minimal() +
+        labs(x = "Date",
+             y = "NH3 (ppm)",
+             color = "Location") +
+        scale_x_datetime(date_labels = "%d-%b", date_breaks = "2 days") +
+        theme(
+                axis.text.x = element_text(angle = 45, hjust = 1),
+                strip.text = element_text(face = "bold")
+        )
+
 
