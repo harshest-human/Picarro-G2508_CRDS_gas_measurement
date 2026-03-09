@@ -12,7 +12,6 @@ library(ggpubr)
 library(readr)
 library(data.table)
 source("Picarro_CRDS_data_cleaning_script.R")
-source("remove_outliers_function.R")
 source("round to interval function.R")
 
 
@@ -43,11 +42,6 @@ ATB_7.5_avg <- ATB_7.5_avg %>%
         mutate(DATE.TIME = ymd_hms(DATE.TIME),
                DATE.TIME = round_to_interval(DATE.TIME, interval_sec = 450)) %>%
         select(DATE.TIME, location, lab, analyzer, everything(), -step_id, -MPVPosition, -measuring.time)
-
-# Remove outliers 
-ATB_7.5_avg <- ATB_7.5_avg %>% 
-        remove_outliers(exclude_cols = c("DATE.TIME", "lab", "analyzer"),
-        group_cols = c("location"))
 
 # Write csv
 write.csv(ATB_7.5_avg,"20250408-14_ATB_7.5_avg_CRDS.1.csv" , row.names = FALSE, quote = FALSE)
@@ -116,11 +110,6 @@ UB_7.5_avg <- UB_7.5_avg %>%
                DATE.TIME = round_to_interval(DATE.TIME, interval_sec = 450)) %>%
         select(DATE.TIME, location, lab, analyzer, everything(), -step_id, -MPVPosition, -measuring.time)
 
-# Remove outliers 
-UB_7.5_avg <- UB_7.5_avg %>% 
-        remove_outliers(exclude_cols = c("DATE.TIME", "lab", "analyzer"),
-                        group_cols = c("location"))
-
 # Write csv
 write.csv(UB_7.5_avg,"20250408-14_UB_7.5_avg_CRDS.2.csv" , row.names = FALSE, quote = FALSE)
 
@@ -186,12 +175,6 @@ LUFA_7.5_avg <- LUFA_7.5_avg %>%
         mutate(DATE.TIME = ymd_hms(DATE.TIME),
                DATE.TIME = round_to_interval(DATE.TIME, interval_sec = 450)) %>%
         select(DATE.TIME, location, lab, analyzer, everything(), -step_id, -MPVPosition, -measuring.time)
-
-
-# Remove outliers 
-LUFA_7.5_avg <- LUFA_7.5_avg %>% 
-        remove_outliers(exclude_cols = c("DATE.TIME", "lab", "analyzer"),
-                        group_cols = c("location"))
 
 # Write csv
 write.csv(LUFA_7.5_avg,"20250408-14_LUFA_7.5_avg_CRDS.3.csv" , row.names = FALSE, quote = FALSE)
