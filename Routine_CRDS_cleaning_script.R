@@ -140,7 +140,7 @@ write_xlsx(CRDS8_20260217_20260223_multi$final_OUT_South, "GrossKreutz_OUT_South
 write_xlsx(CRDS8_20260217_20260223_multi$final_OUT_North, "GrossKreutz_OUT_North_2026-02-17_to_2026-02-23.xlsx")
 
 ####### 2026-02-23 to 2026-03-02 ATB Data importing and cleaning ########
-CRDS8_20260223_20260302 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2026/02",
+CRDS8_20260223_20260302 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2026",
                                    
                                    gas = c("CO2", "CH4", "NH3", "H2O", "N2O"),
                                    
@@ -262,5 +262,38 @@ write_csv(CRDS8_20260223_20260302_multi$hourly_wide, "H_CRDS8+9_20260223_2026030
 write_xlsx(CRDS8_20260223_20260302_multi$final_IN,        "GrossKreutz_IN_2026-02-23_to_2026-03-02.xlsx")
 write_xlsx(CRDS8_20260223_20260302_multi$final_OUT_South, "GrossKreutz_OUT_South_2026-02-23_to_2026-03-02.xlsx")
 write_xlsx(CRDS8_20260223_20260302_multi$final_OUT_North, "GrossKreutz_OUT_North_2026-02-23_to_2026-03-02.xlsx")
+
+
+####### 2026-03-02 to 2026-03-09 ATB Data importing and cleaning ########
+CRDS8_20260302_20260309 <- piclean(input_path = "D:/Data Analysis/Gas_data/Raw_data/CRDS_raw/Picarro_G2508/2026",
+                                   
+                                   gas = c("CO2", "CH4", "NH3", "H2O", "N2O"),
+                                   
+                                   start_time = "2026-03-02 07:58:12",
+                                   
+                                   end_time = "2026-03-09 08:35:10",
+                                   
+                                   flush = 60, # Flush time in seconds
+                                   
+                                   interval = 240,  # Total time at MPVPosition in seconds
+                                   
+                                   MPVPosition.levels = c("1", "2", "3", "4", "5", "6", "7", "8","9"),
+                                   
+                                   location.levels = c("1", "2", "3", "4", "5", "6", "7", "in", "S"),
+                                   
+                                   lab = "ATB",
+                                   
+                                   analyzer = "CRDS8")
+
+
+CRDS8_20260302_20260309_multi <- reshape_crds(CRDS8_20260302_20260309)
+
+# Write the wide CSV
+write_csv(CRDS8_20260302_20260309_multi$hourly_wide, "H_CRDS8+9_20260302_20260309.csv")
+
+# Write the final Excel files
+write_xlsx(CRDS8_20260302_20260309_multi$final_IN,        "GrossKreutz_IN_2026-03-02_to_2026-03-09.xlsx")
+write_xlsx(CRDS8_20260302_20260309_multi$final_OUT_South, "GrossKreutz_OUT_South_2026-03-02_to_2026-03-09.xlsx")
+write_xlsx(CRDS8_20260302_20260309_multi$final_OUT_North, "GrossKreutz_OUT_North_2026-03-02_to_2026-03-09.xlsx")
 
 
