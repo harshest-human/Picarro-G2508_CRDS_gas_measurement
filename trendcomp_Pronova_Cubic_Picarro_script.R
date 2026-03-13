@@ -163,3 +163,37 @@ q_e_errorbarplot <- emierrorbarplot(data = emission_reshaped,
 
 q_e_trend_plot <- emitrendplot(data = emission_reshaped,
                                y = c("Q_vent", "e_CH4_ghLU", "e_NH3_ghLU"))
+
+####### Statistical Data Analysis #######
+emi_daily <- read.csv("emission_data_20251209_20251224.csv") %>%
+        mutate(
+                DATE.TIME = ymd_hms(DATE.TIME),
+                DATE = as.Date(DATE.TIME)
+        ) %>%
+        group_by(DATE, analyzer) %>%
+        summarise(
+                Q_vent = mean(Q_vent, na.rm = TRUE),
+                e_CH4_ghLU = mean(e_CH4_ghLU, na.rm = TRUE),
+                e_NH3_ghLU = mean(e_NH3_ghLU, na.rm = TRUE),
+                .groups = "drop"
+        )
+
+emi_compare <- emi_daily %>%
+        pivot_wider(
+                names_from = analyzer,
+                values_from = c(Q_vent, e_CH4_ghLU, e_NH3_ghLU)
+        )
+
+library(broom)
+
+models <- list(
+        Qvent_Cubic   = lm(Q_vent_Cubic ~ Q_vent_Picarro, data = emi_compare),
+        Qvent_Pronova = lm(Q_vent_Pronova ~ Q_vent_Picarro, data = emi_compare),
+        CH4_Cubic     = lm(e_CH4_ghLU_Cubic ~ e_CH4_ghLU_Picarro, data = emi_compare),
+        CH4_Pronova   = lm(e_CH4_ghLU_Pronova ~ e_CH4_ghLU_Picarro, data = emi_compare),
+        NH3_Cubic     = lm(e_NH3_ghLU_Cubic ~ e_NH3_ghLU_Picarro, data = emi_compare),
+        NH3_Pronova   = lm(e_NH3_ghLU_Pronova ~ e_NH3_ghLU_Picarro, data = emi_compare)
+)
+
+sapply(models, function(x) summary(x)$r.squared)
+
