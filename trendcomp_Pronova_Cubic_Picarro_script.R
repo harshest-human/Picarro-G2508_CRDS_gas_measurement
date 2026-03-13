@@ -117,7 +117,6 @@ cubic_data <- cubic_files %>%
 Gas_data <- bind_rows(pronova_data,crds_data, cubic_data) %>% arrange(DATE.HOUR)
 Gas_data <- remove_outliers(Gas_data, exclude_cols = c("DATE.HOUR", "analyzer"), group_cols = NULL)
 
-####### Data Analysis ######
 ####### Calculate ventilation rate and Emissions ######
 # Import animal data
 animal_data <- read_excel("animal_data/animal_data_2025-01-10_2026-01-19.xlsx") 
@@ -152,7 +151,7 @@ emission_reshaped <-reshaper(emission_data)
 write_excel_csv(emission_reshaped, "emission_reshaped_20251209_20251224.csv")
 
 
-####### Data Visualization: Emissions ########
+####### Data Visualization ########
 d_errorbarplot <- emierrorbarplot(emission_reshaped, y = c("delta_CO2", "delta_CH4", "delta_NH3"))
 
 d_trendplot <- emitrendplot(emission_reshaped,
