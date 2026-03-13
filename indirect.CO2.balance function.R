@@ -62,45 +62,11 @@ reshaper <- function(df) {
                         names_to = "var",
                         values_to = "value"
                 ) %>%
-                mutate(
-                        location = case_when(
-                                str_detect(var, "_in$") ~ "Barn inside",
-                                str_detect(var, "_N$")  ~ "North background",
-                                str_detect(var, "_S$")  ~ "South background",
-                                TRUE ~ NA_character_
-                        ),
-                        var = str_remove(var, "_(in|N|S)$"),
-                        DATE.TIME = as.POSIXct(DATE.TIME),
-                        day  = factor(as.Date(DATE.TIME)),
-                        hour = factor(format(DATE.TIME, "%H:%M"))
-                ) %>%
-                select(DATE.TIME, day, hour, location, analyzer, var, value) %>%
-                arrange(DATE.TIME, var, analyzer, location) %>%
-                # Map special analyzers
-                mutate(analyzer = case_when(
-                        var %in% c("temp", "RH")                           ~ "HOBO",
-                        var %in% c("wd_mst", "ws_mst", "wd_trv", "ws_trv") ~ "USA",
-                        var %in% c("n_dairycows")                          ~ "RGB",
-                        TRUE                                               ~ analyzer
-                ))
-        
-        # ---- Add baseline per DATE.TIME, location, var ----
-        baseline_df <- df_long %>%
-                group_by(DATE.TIME, location, var) %>%
-                summarise(
-                        value = mean(value, na.rm = TRUE),
-                        day   = first(day),    # copy day
-                        hour  = first(hour),   # copy hour
-                        .groups = "drop"
-                ) %>%
-                mutate(analyzer = "baseline")
+                select(DATE.TIME, day, hour, analyzer, var, value) %>%
+                arrange(DATE.TIME, var, analyzer) 
         
         df_long <- bind_rows(df_long, baseline_df) %>%
-                mutate(analyzer = factor(analyzer,
-                                         levels = c("FTIR.1","FTIR.2","FTIR.3","FTIR.4",
-                                                    "CRDS.1","CRDS.2","CRDS.3",
-                                                    "HOBO","USA","RGB","baseline"))) %>%
-                arrange(DATE.TIME, location, var)
+                arrange(DATE.TIME)
         
         return(df_long)
 }
