@@ -253,7 +253,7 @@ emitrendplot <- function(data, y = NULL) {
         x_breaks <- seq(
                 from = min(summary_data$DATE.TIME, na.rm = TRUE),
                 to   = max(summary_data$DATE.TIME, na.rm = TRUE),
-                by   = "12 hours"
+                by   = "24 hours"
         )
         
         p <- ggplot(
