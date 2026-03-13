@@ -150,6 +150,7 @@ emission_reshaped <-reshaper(emission_data)
 
 write_excel_csv(emission_reshaped, "emission_reshaped_20251209_20251224.csv")
 
+write_excel_csv(emission_data, "emission_data_20251209_20251224.csv")
 
 ####### Data Visualization ########
 d_errorbarplot <- emierrorbarplot(emission_reshaped, y = c("delta_CO2", "delta_CH4", "delta_NH3"))
