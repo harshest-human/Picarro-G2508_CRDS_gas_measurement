@@ -1,3 +1,4 @@
+
 # Development of indirect.CO2.balance function
 indirect.CO2.balance <- function(df) {
         library(dplyr)
@@ -37,4 +38,77 @@ indirect.CO2.balance <- function(df) {
                         e_NH3_ghLU = (e_NH3_gh * 500) / (n_dairycows * m_weight),
                         e_CH4_ghLU = (e_CH4_gh * 500) / (n_dairycows * m_weight)
                 )
+}
+
+# Development of pivot longer function
+reshaper <- function(df) {
+        library(dplyr)
+        library(tidyr)
+        library(stringr)
+        library(lubridate)
+        
+        meta_cols <- c("DATE.TIME", "analyzer")
+        
+        # Identify numeric measurement columns
+        measure_cols <- df %>%
+                select(-all_of(meta_cols)) %>%
+                select(where(is.numeric)) %>%
+                names()
+        
+        # Pivot to long format
+        df_long <- df %>%
+                pivot_longer(
+                        cols = all_of(measure_cols),
+                        names_to = "var",
+                        values_to = "value"
+                ) %>%
+                mutate(
+                        location = case_when(
+                                str_detect(var, "_in$") ~ "Barn inside",
+                                str_detect(var, "_N$")  ~ "North background",
+                                str_detect(var, "_S$")  ~ "South background",
+                                TRUE ~ NA_character_
+                        ),
+                        var = str_remove(var, "_(in|N|S)$"),
+                        DATE.TIME = as.POSIXct(DATE.TIME),
+                        day  = factor(as.Date(DATE.TIME)),
+                        hour = factor(format(DATE.TIME, "%H:%M"))
+                ) %>%
+                select(DATE.TIME, day, hour, location, analyzer, var, value) %>%
+                arrange(DATE.TIME, var, analyzer, location) %>%
+                # Map special analyzers
+                mutate(analyzer = case_when(
+                        var %in% c("temp", "RH")                           ~ "HOBO",
+                        var %in% c("wd_mst", "ws_mst", "wd_trv", "ws_trv") ~ "USA",
+                        var %in% c("n_dairycows")                          ~ "RGB",
+                        TRUE                                               ~ analyzer
+                ))
+        
+        # ---- Add baseline per DATE.TIME, location, var ----
+        baseline_df <- df_long %>%
+                group_by(DATE.TIME, location, var) %>%
+                summarise(
+                        value = mean(value, na.rm = TRUE),
+                        day   = first(day),    # copy day
+                        hour  = first(hour),   # copy hour
+                        .groups = "drop"
+                ) %>%
+                mutate(analyzer = "baseline")
+        
+        df_long <- bind_rows(df_long, baseline_df) %>%
+                mutate(analyzer = factor(analyzer,
+                                         levels = c("FTIR.1","FTIR.2","FTIR.3","FTIR.4",
+                                                    "CRDS.1","CRDS.2","CRDS.3",
+                                                    "HOBO","USA","RGB","baseline"))) %>%
+                arrange(DATE.TIME, location, var)
+        
+        return(df_long)
+}
+
+# Errorbarplot Function
+emierrorbarplot <- emimeanse_plot <- function(data, y = NULL, location_filter = NULL, plot_err = FALSE) {
+}
+
+# Trend Plot Function 
+emitrendplot <- function(data, y = NULL, location_filter = NULL, plot_err = FALSE, x = "DATE.TIME") {
 }
