@@ -63,9 +63,7 @@ reshaper <- function(df) {
                         values_to = "value"
                 ) %>%
                 select(DATE.TIME, analyzer, var, value) %>%
-                arrange(DATE.TIME, var, analyzer) 
-        
-        df_long <- bind_rows(df_long, baseline_df) %>%
+                arrange(DATE.TIME, var, analyzer) %>%
                 arrange(DATE.TIME)
         
         return(df_long)
