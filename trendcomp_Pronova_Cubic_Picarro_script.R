@@ -140,7 +140,7 @@ input_data <- Gas_data %>%
         left_join(animal_data, by = "DATE.HOUR", relationship = "many-to-many") %>%
         left_join(temp_data,   by = "DATE.HOUR", relationship = "many-to-many") %>%
         filter(DATE.HOUR >= ymd_hms("2025-12-09 12:00:00"),
-               DATE.HOUR <= ymd_hms("2025-12-24 23:00:00")) %>%
+               DATE.HOUR <= ymd_hms("2025-12-22 23:00:00")) %>%
         rename("DATE.TIME" = "DATE.HOUR")
 
 # Calculate Emissions
@@ -148,9 +148,9 @@ emission_data <- indirect.CO2.balance(input_data)
 
 emission_reshaped <-reshaper(emission_data)
 
-write_excel_csv(emission_reshaped, "emission_reshaped_20251209_20251224.csv")
+write_excel_csv(emission_reshaped, "emission_reshaped_20251209_20251222.csv")
 
-write_excel_csv(emission_data, "emission_data_20251209_20251224.csv")
+write_excel_csv(emission_data, "emission_data_20251209_20251222.csv")
 
 ####### Data Visualization ########
 d_errorbarplot <- emierrorbarplot(emission_reshaped, y = c("delta_CO2", "delta_CH4", "delta_NH3"))
@@ -165,7 +165,7 @@ q_e_trend_plot <- emitrendplot(data = emission_reshaped,
                                y = c("Q_vent", "e_CH4_ghLU", "e_NH3_ghLU"))
 
 ####### Statistical Data Analysis #######
-emi_daily <- read.csv("emission_data_20251209_20251224.csv") %>%
+emi_daily <- read.csv("emission_data_20251209_20251222.csv") %>%
         mutate(
                 DATE.TIME = ymd_hms(DATE.TIME),
                 DATE = as.Date(DATE.TIME)
@@ -178,11 +178,42 @@ emi_daily <- read.csv("emission_data_20251209_20251224.csv") %>%
                 .groups = "drop"
         )
 
+
 emi_compare <- emi_daily %>%
         pivot_wider(
                 names_from = analyzer,
                 values_from = c(Q_vent, e_CH4_ghLU, e_NH3_ghLU)
+        ) %>%
+        mutate(
+                RE_Qvent_Cubic   = (Q_vent_Cubic   - Q_vent_Picarro) / Q_vent_Picarro * 100,
+                RE_Qvent_Pronova = (Q_vent_Pronova - Q_vent_Picarro) / Q_vent_Picarro * 100,
+                
+                RE_CH4_Cubic     = (e_CH4_ghLU_Cubic    - e_CH4_ghLU_Picarro) / e_CH4_ghLU_Picarro * 100,
+                RE_CH4_Pronova   = (e_CH4_ghLU_Pronova  - e_CH4_ghLU_Picarro) / e_CH4_ghLU_Picarro * 100,
+                
+                RE_NH3_Cubic     = (e_NH3_ghLU_Cubic    - e_NH3_ghLU_Picarro) / e_NH3_ghLU_Picarro * 100,
+                RE_NH3_Pronova   = (e_NH3_ghLU_Pronova  - e_NH3_ghLU_Picarro) / e_NH3_ghLU_Picarro * 100
         )
+
+
+emi_analyzer <- emi_compare %>%
+        summarise(Q_vent_Picarro = mean(Q_vent_Picarro, na.rm = TRUE),
+                  Q_vent_Cubic = mean(Q_vent_Cubic, na.rm = TRUE),
+                  Q_vent_Pronova = mean(Q_vent_Pronova, na.rm = TRUE),
+                  e_CH4_ghLU_Picarro = mean(e_CH4_ghLU_Picarro, na.rm = TRUE),
+                  e_CH4_ghLU_Cubic = mean(e_CH4_ghLU_Cubic, na.rm = TRUE),
+                  e_CH4_ghLU_Pronova = mean(e_CH4_ghLU_Pronova, na.rm = TRUE),
+                  e_NH3_ghLU_Picarro = mean(e_NH3_ghLU_Picarro, na.rm = TRUE),
+                  e_NH3_ghLU_Cubic = mean(e_NH3_ghLU_Cubic, na.rm = TRUE),
+                  e_NH3_ghLU_Pronova = mean(e_NH3_ghLU_Pronova, na.rm = TRUE),
+                  RE_Qvent_Cubic = mean(RE_Qvent_Cubic),
+                  RE_Qvent_Pronova = mean(RE_CH4_Cubic),
+                  RE_CH4_Cubic = mean(RE_CH4_Cubic),
+                  RE_NH3_Pronova = mean(RE_NH3_Pronova),
+                  .groups = "drop"
+        )
+                
+
 
 library(broom)
 
@@ -196,4 +227,5 @@ models <- list(
 )
 
 sapply(models, function(x) summary(x)$r.squared)
+
 
