@@ -30,7 +30,7 @@ crds_data <- purrr::map_dfr(crds_files,read.csv) %>%
                delta_CH4 = CH4_in - CH4_S,
                delta_NH3 = NH3_in - NH3_S,
                analyzer = "Picarro") %>%
-        filter(DATE.HOUR >= "2025-10-01 00:00:00", DATE.HOUR <= "2026-02-23 23:00:00") %>%
+        filter(DATE.HOUR >= "2025-10-01 00:00:00", DATE.HOUR <= "2026-03-30 23:00:00") %>%
         select(DATE.HOUR, analyzer, delta_CO2, delta_CH4, delta_NH3) %>% 
         remove_outliers(exclude_cols = c("DATE.HOUR", "analyzer"),
                         group_cols = c("DATE.HOUR"))
@@ -78,7 +78,7 @@ pronova_data  <- pronova_files %>%
                   delta_N2O = mean(as.numeric(gsub(",", ".", `N2O in ppm`)), na.rm = TRUE),
                   delta_NH3 = mean(as.numeric(gsub(",", ".", `NH3 in ppm`)), na.rm = TRUE)) %>%
         mutate(analyzer = "Pronova") %>%
-        filter(DATE.HOUR >= "2025-10-01 00:00:00", DATE.HOUR <= "2026-02-23 23:00:00") %>%
+        filter(DATE.HOUR >= "2025-10-01 00:00:00", DATE.HOUR <= "2026-03-30 23:00:00") %>%
         select(DATE.HOUR, analyzer, delta_CO2, delta_CH4, delta_NH3) %>% 
         remove_outliers(exclude_cols = c("DATE.HOUR", "analyzer"),
                         group_cols = c("DATE.HOUR"))
@@ -108,7 +108,7 @@ cubic_data <- cubic_files %>%
                delta_CH4 = CH4_in - CH4_S,
                delta_NH3 = NH3_in - NH3_S,
                analyzer = "Cubic")  %>%
-        filter(DATE.HOUR >= "2025-10-01 00:00:00", DATE.HOUR <= "2026-02-23 23:00:00") %>%
+        filter(DATE.HOUR >= "2025-10-01 00:00:00", DATE.HOUR <= "2026-03-30 23:00:00") %>%
         select(DATE.HOUR, analyzer, delta_CO2, delta_CH4, delta_NH3) %>% 
         remove_outliers(exclude_cols = c("DATE.HOUR", "analyzer"),
                         group_cols = c("DATE.HOUR"))
@@ -139,8 +139,8 @@ temp_data <- list.files("weather_data/temp_rh",
 input_data <- Gas_data %>%
         left_join(animal_data, by = "DATE.HOUR", relationship = "many-to-many") %>%
         left_join(temp_data,   by = "DATE.HOUR", relationship = "many-to-many") %>%
-        filter(DATE.HOUR >= ymd_hms("2025-12-09 12:00:00"),
-               DATE.HOUR <= ymd_hms("2025-12-22 23:00:00")) %>%
+        filter(DATE.HOUR >= ymd_hms("2026-03-01 00:00:00"),
+               DATE.HOUR <= ymd_hms("2026-03-30 23:00:00")) %>%
         rename("DATE.TIME" = "DATE.HOUR")
 
 # Calculate Emissions
@@ -148,9 +148,9 @@ emission_data <- indirect.CO2.balance(input_data)
 
 emission_reshaped <-reshaper(emission_data)
 
-write_excel_csv(emission_reshaped, "emission_reshaped_20251209_20251222.csv")
+#write_excel_csv(emission_reshaped, "emission_reshaped_20251209_20251222.csv")
 
-write_excel_csv(emission_data, "emission_data_20251209_20251222.csv")
+#write_excel_csv(emission_data, "emission_data_20251209_20251222.csv")
 
 ####### Data Visualization ########
 d_errorbarplot <- emierrorbarplot(emission_reshaped, y = c("delta_CO2", "delta_CH4", "delta_NH3"))
@@ -209,6 +209,8 @@ emi_analyzer <- emi_compare %>%
                   RE_Qvent_Cubic = mean(RE_Qvent_Cubic),
                   RE_Qvent_Pronova = mean(RE_CH4_Cubic),
                   RE_CH4_Cubic = mean(RE_CH4_Cubic),
+                  RE_CH4_Pronova =mean(RE_CH4_Pronova),
+                  RE_NH3_Cubic = mean(RE_NH3_Cubic),
                   RE_NH3_Pronova = mean(RE_NH3_Pronova),
                   .groups = "drop"
         )
