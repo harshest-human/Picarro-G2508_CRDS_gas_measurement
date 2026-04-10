@@ -331,3 +331,41 @@ write_xlsx(CRDS8_20260309_20260330_multi$final_OUT_North, "GrossKreutz_OUT_North
 
 
 
+
+####### 2026-03-30 to 2026-04-10 ATB Data importing and cleaning ########
+CRDS8_20260330_20260410 <- piclean(input_path = "D:/Harsh_Data/Data_analysis/Picarro-G2508_CRDS_gas_measurement/crds_data/CDRS8_raw/2026",
+                                   
+                                   gas = c("CO2", "CH4", "NH3", "H2O", "N2O"),
+                                   
+                                   start_time = "2026-03-30 09:06:45",
+                                   
+                                   end_time = "2026-04-10 10:53:24",
+                                   
+                                   flush = 60, # Flush time in seconds
+                                   
+                                   interval = 240,  # Total time at MPVPosition in seconds
+                                   
+                                   MPVPosition.levels = c("1", "2", "3", "4", "5", "6", "7", "8","9"),
+                                   
+                                   location.levels = c("1", "2", "3", "4", "5", "6", "7", "in", "S"),
+                                   
+                                   lab = "ATB",
+                                   
+                                   analyzer = "CRDS8")
+
+
+CRDS8_20260330_20260410_multi <- reshape_crds(CRDS8_20260330_20260410)
+
+# Write the wide CSV
+write_csv(CRDS8_20260330_20260410_multi$hourly_wide, "H_CRDS8+9_20260330_20260410.csv")
+
+# Write the final Excel files
+write_xlsx(CRDS8_20260330_20260410_multi$final_IN,        "GrossKreutz_IN_2026-03-30_to_2026-04-10.xlsx")
+write_xlsx(CRDS8_20260330_20260410_multi$final_OUT_South, "GrossKreutz_OUT_South_2026-03-30_to_2026-04-10.xlsx")
+write_xlsx(CRDS8_20260330_20260410_multi$final_OUT_North, "GrossKreutz_OUT_North_2026-03-30_to_2026-04-10.xlsx")
+
+
+
+
+
+
