@@ -139,7 +139,7 @@ temp_data <- list.files("weather_data/temp_rh",
 input_data <- Gas_data %>%
         left_join(animal_data, by = "DATE.HOUR", relationship = "many-to-many") %>%
         left_join(temp_data,   by = "DATE.HOUR", relationship = "many-to-many") %>%
-        filter(DATE.HOUR >= ymd_hms("2026-03-01 00:00:00"),
+        filter(DATE.HOUR >= ymd_hms("2026-03-10 00:00:00"),
                DATE.HOUR <= ymd_hms("2026-03-30 23:00:00")) %>%
         rename("DATE.TIME" = "DATE.HOUR")
 
